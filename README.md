@@ -10,5 +10,4 @@ Opcionalmente se plantea la posibilidad de gestionar grupos de amistad, de forma
 - Un servidor aceptando conexiones de múltiples clientes, donde todos son amigos entre sí. No hay clave de acceso de los clientes (5 puntos).
 - Un servidor aceptando conexiones de múltiples clientes, en donde hay grupos de amigos definidos de forma estática. La clave de acceso al sistema deberá de poder ser modificada por el cliente (2,5 puntos).
 - Un servidor aceptando conexiones de múltiples clientes, en donde hay grupos de amigos definidos de forma dinámica (para ello será necesaria una base de datos que contenga todos los usuarios, la lista de sus amigos y su clave de acceso). Para insertar nuevos usuarios en la base de datos será necesario proporcionar un mecanismo para registrarlo en el sistema que nos pida el nombre de usuario y clave de acceso. Asimismo, deberá de haber un mecanismo que permita añadir desde el cliente un nuevo amigo en caso de conocer su nombre de usuario (2,5 puntos).
- 
-Se sobreentiende que el cliente debe de tener una interfaz gráfica con una funcionalidad mínima.
+- Se sobreentiende que el cliente debe de tener una interfaz gráfica con una funcionalidad mínima.
