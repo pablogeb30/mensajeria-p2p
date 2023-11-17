@@ -23,5 +23,5 @@
 hs_err_pid*
 replay_pid*
 
-# MacOS hidden files
+# MacOS hidden filess
 **/.DS_Store
