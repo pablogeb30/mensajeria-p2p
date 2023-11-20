@@ -1,26 +1,21 @@
 package agpg.client;
 
+// Importamos las librerias necesarias
 import java.rmi.*;
 import java.rmi.server.*;
 
-/**
- * This class implements the remote interface
- * CallbackClientInterface.
- * 
- * @author M. L. Liu
- */
+// Implementacion de la interfaz del cliente
+public class CallbackClientImpl extends UnicastRemoteObject implements CallbackClientInterface {
 
-public class CallbackClientImpl extends UnicastRemoteObject
-      implements CallbackClientInterface {
+    // Constructor de la clase
+    public CallbackClientImpl() throws RemoteException {
+        super();
+    }
 
-   public CallbackClientImpl() throws RemoteException {
-      super();
-   }
+    // Metodo ejecutado por un cliente para notificar al otro
+    public String notifyMe(String message) {
+        System.out.println(message);
+        return message;
+    }
 
-   public String notifyMe(String message) {
-      String returnMessage = "Call back received: " + message;
-      System.out.println(returnMessage);
-      return returnMessage;
-   }
-
-}// end CallbackClientImpl class
+}

@@ -1,74 +1,46 @@
 package agpg.server;
 
+// Importamos los paquetes y librerias necesarias
 import agpg.client.*;
-
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
 
-/**
- * This class implements the remote interface
- * CallbackServerInterface.
- * 
- * @author M. L. Liu
- */
+// Implementacion de la interfaz del servidor
+public class CallbackServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
-public class CallbackServerImpl extends UnicastRemoteObject
-    implements CallbackServerInterface {
+    // Lista de clientes registrados
+    private ArrayList<CallbackClientInterface> clientList;
 
-  private ArrayList<CallbackClientInterface> clientList;
-
-  public CallbackServerImpl() throws RemoteException {
-    super();
-    clientList = new ArrayList<>();
-  }
-
-  public String sayHello()
-      throws java.rmi.RemoteException {
-    return ("hello");
-  }
-
-  public synchronized void registerForCallback(
-      CallbackClientInterface callbackClientObject)
-      throws java.rmi.RemoteException {
-    // store the callback object into the vector
-    if (!(clientList.contains(callbackClientObject))) {
-      clientList.add(callbackClientObject);
-      System.out.println("Registered new client ");
-      doCallbacks();
-    } // end if
-  }
-
-  // This remote method allows an object client to
-  // cancel its registration for callback
-  // @param id is an ID for the client; to be used by
-  // the server to uniquely identify the registered client.
-  public synchronized void unregisterForCallback(
-      CallbackClientInterface callbackClientObject)
-      throws java.rmi.RemoteException {
-    if (clientList.remove(callbackClientObject)) {
-      System.out.println("Unregistered client ");
-    } else {
-      System.out.println(
-          "unregister: clientwasn't registered.");
+    // Constructor de la clase
+    public CallbackServerImpl() throws RemoteException {
+        super();
+        clientList = new ArrayList<>();
     }
-  }
 
-  private synchronized void doCallbacks() throws java.rmi.RemoteException {
-    // make callback to each registered client
-    System.out.println(
-        "**************************************\n"
-            + "Callbacks initiated ---");
-    for (int i = 0; i < clientList.size(); i++) {
-      System.out.println("doing " + i + "-th callback\n");
-      // convert the vector object to a callback object
-      CallbackClientInterface nextClient = (CallbackClientInterface) clientList.get(i);
-      // invoke the callback method
-      nextClient.notifyMe("Number of registered clients="
-          + clientList.size());
-    } // end for
-    System.out.println("********************************\n" +
-        "Server completed callbacks ---");
-  } // doCallbacks
+    // Este metodo registra a un cliente para que reciba callbacks
+    public synchronized void registerForCallback(CallbackClientInterface clientObject) throws RemoteException {
+        if (!(clientList.contains(clientObject))) {
+            clientList.add(clientObject);
+            System.out.println("Nuevo cliente registrado");
+            doCallbacks();
+        }
+    }
 
-}// end CallbackServerImpl class
+    // Este metodo cancela el registro de un cliente para que no reciba callbacks
+    public synchronized void unregisterForCallback(CallbackClientInterface clientObject) throws RemoteException {
+        if (clientList.remove(clientObject)) {
+            System.out.println("Cancelado registro de un cliente");
+        } else {
+            System.out.println("Cliente no registrado anteriormente");
+        }
+    }
+
+    // Este metodo realiza los callbacks a los clientes registrados
+    private synchronized void doCallbacks() throws RemoteException {
+        for (int i = 0; i < clientList.size(); i++) {
+            clientList.get(i).notifyMe("Hola");
+        }
+    }
+
+}
