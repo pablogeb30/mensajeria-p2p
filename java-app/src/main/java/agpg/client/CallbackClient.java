@@ -21,6 +21,9 @@ public class CallbackClient {
             CallbackClientInterface callbackObj = new CallbackClientImpl();
             h.registerForCallback(callbackObj);
             System.out.println("Registrado para callback");
+            while (h.isRegistered(callbackObj)) {
+                // Tareas del cliente
+            }
             h.unregisterForCallback(callbackObj);
             System.out.println("Cancelado registro para callback");
         } catch (Exception e) {

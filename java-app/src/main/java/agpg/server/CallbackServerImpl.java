@@ -43,4 +43,9 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
+    // Este metodo verifica si un cliente esta registrado
+    public synchronized boolean isRegistered(CallbackClientInterface clientObject) throws RemoteException {
+        return clientList.contains(clientObject);
+    }
+
 }

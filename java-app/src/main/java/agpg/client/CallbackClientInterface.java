@@ -6,7 +6,7 @@ import java.rmi.*;
 // Interfaz del cliente
 public interface CallbackClientInterface extends Remote {
 
-    // Metodo ejecutado por un cliente para notificar al otro
+    // Metodo ejecutado por el servidor para notificar al cliente
     public String notifyMe(String message) throws RemoteException;
 
 }
