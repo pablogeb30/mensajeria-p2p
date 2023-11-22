@@ -8,9 +8,9 @@ import java.rmi.*;
 public interface CallbackServerInterface extends Remote {
 
     // Metodo que registra a un cliente para que reciba callbacks
-    public void registerCallback(CallbackClientInterface cObject, String name) throws RemoteException;
+    public void registerCallback(String name, CallbackClientInterface cObject) throws RemoteException;
 
     // Metodo que cancela el registro de un cliente para que no reciba callbacks
-    public void unregisterCallback(CallbackClientInterface cObject, String name) throws RemoteException;
+    public void unregisterCallback(String name, CallbackClientInterface cObject) throws RemoteException;
 
 }
