@@ -22,19 +22,22 @@ public class CallbackClient {
             System.out.println("Introduce tu nombre de usuario:");
             String name = scanner.nextLine();
             CallbackClientInterface callbackObj = new CallbackClientImpl(name);
-            h.registerCallback(name, callbackObj);
-            System.out.println("CHAT INICIADO --- 'EXIT' PARA SALIR");
+            if (!h.registerCallback(callbackObj)) {
+                System.out.println("Usuario ya conectado: " + name);
+                System.exit(1);
+            }
+            System.out.println("----- CHAT INICIADO -----");
             while (true) {
-                System.out.println("Mensaje a enviar:");
+                System.out.println("Mensaje (o 'EXIT'):");
                 String input = scanner.nextLine();
                 if (input.equals("EXIT")) {
                     break;
                 }
-                System.out.println("Nombre de usuario receptor:");
+                System.out.println("Usuario:");
                 String receiver = scanner.nextLine();
-                callbackObj.sendMessage(callbackObj.getClientMap().get(receiver), input);
+                callbackObj.sendMessage(receiver, input);
             }
-            h.unregisterCallback(name, callbackObj);
+            h.unregisterCallback(callbackObj);
             scanner.close();
             System.exit(0);
         } catch (Exception e) {

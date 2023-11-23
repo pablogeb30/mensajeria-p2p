@@ -26,32 +26,42 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         System.out.println(message);
     }
 
+    // Metodo ejecutado por el servidor para inicializar el mapa de clientes
+    public void setFriends(HashMap<String, CallbackClientInterface> clientMap) throws RemoteException {
+        System.out.println("Usuarios conectados (" + clientMap.size() + "):");
+        System.out.println("--------------------------------------------------");
+        for (CallbackClientInterface client : clientMap.values()) {
+            this.clientMap.put(client.getName(), client);
+            System.out.println(client.getName());
+        }
+        System.out.println("--------------------------------------------------");
+    }
+
     // Metodo ejecutado por el servidor para actualizar el mapa de clientes
-    public void updateMyClients(String name, CallbackClientInterface cObject) throws RemoteException {
-        if (!(clientMap.containsKey(name))) {
-            clientMap.put(name, cObject);
+    public void updateFriends(CallbackClientInterface cObject) throws RemoteException {
+        if (!(clientMap.containsKey(cObject.getName())) && !(cObject.getName().equals(this.getName()))) {
+            clientMap.put(cObject.getName(), cObject);
+            System.out.println("Nuevo usuario conectado: " + cObject.getName());
         } else {
-            clientMap.remove(name);
+            if (!cObject.getName().equals(this.getName())) {
+                clientMap.remove(cObject.getName());
+                System.out.println("Usuario desconectado: " + cObject.getName());
+            }
         }
     }
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
-    public void sendMessage(CallbackClientInterface cObject, String message) throws RemoteException {
-        if (!clientMap.containsValue(cObject)) {
-            System.out.println("No existe el usuario " + cObject.getName());
+    public void sendMessage(String name, String message) throws RemoteException {
+        if (!clientMap.containsKey(name)) {
+            System.out.println("No existe el usuario: " + name);
         } else {
-            clientMap.get(cObject.getName()).notifyMe(message);
+            clientMap.get(name).notifyMe(message);
         }
     }
 
     // Getter del nombre del cliente
     public String getName() throws RemoteException {
         return name;
-    }
-
-    // Getter del mapa de clientes
-    public HashMap<String, CallbackClientInterface> getClientMap() throws RemoteException {
-        return clientMap;
     }
 
 }

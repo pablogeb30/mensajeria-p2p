@@ -19,32 +19,31 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
     }
 
     // Este metodo registra a un cliente para que reciba callbacks
-    public synchronized void registerCallback(String name, CallbackClientInterface cObject) throws RemoteException {
-        if (!(clientMap.containsKey(name))) {
-            clientMap.put(name, cObject);
-            updateClientsCallback(name, cObject);
-            System.out.println("Nuevo cliente registrado");
+    public synchronized boolean registerCallback(CallbackClientInterface cObject) throws RemoteException {
+        if (!(clientMap.containsKey(cObject.getName()))) {
+            cObject.setFriends(clientMap);
+            clientMap.put(cObject.getName(), cObject);
+            updateClientsCallback(cObject);
+            System.out.println("Nuevo usuario conectado: " + cObject.getName());
+            return true;
         } else {
-            System.out.println("Ya existe un cliente con ese nombre");
+            System.out.println("Usuario ya conectado: " + cObject.getName());
+            return false;
         }
     }
 
     // Este metodo cancela el registro de un cliente para que no reciba callbacks
-    public synchronized void unregisterCallback(String name, CallbackClientInterface cObject) throws RemoteException {
-        if (clientMap.containsValue(cObject)) {
-            clientMap.remove(name);
-            updateClientsCallback(name, cObject);
-            System.out.println("Cancelado registro de un cliente");
-        } else {
-            System.out.println("Cliente no registrado anteriormente");
-        }
+    public synchronized void unregisterCallback(CallbackClientInterface cObject) throws RemoteException {
+        clientMap.remove(cObject.getName());
+        updateClientsCallback(cObject);
+        System.out.println("Usuario desconectado: " + cObject.getName());
     }
 
     // Este metodo actualiza el mapa de clientes que tiene cada objeto cliente
-    private void updateClientsCallback(String name, CallbackClientInterface cObject) {
+    private void updateClientsCallback(CallbackClientInterface cObject) {
         try {
             for (CallbackClientInterface client : clientMap.values()) {
-                client.updateMyClients(name, cObject);
+                client.updateFriends(cObject);
             }
         } catch (RemoteException e) {
             System.out.println("Excepcion en updateClientsCallback: " + e);

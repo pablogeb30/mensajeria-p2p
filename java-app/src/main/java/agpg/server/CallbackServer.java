@@ -18,7 +18,7 @@ public class CallbackServer {
             startRegistry(RMIPORT);
             CallbackServerImpl exportedObj = new CallbackServerImpl();
             Naming.rebind(REGISTRYURL, exportedObj);
-            System.out.println("Servidor de callback listo");
+            System.out.println("Servidor de callback listo (CTRL-C para salir)");
         } catch (Exception e) {
             System.out.println("Excepcion en el main de CallbackServer: " + e);
         }
