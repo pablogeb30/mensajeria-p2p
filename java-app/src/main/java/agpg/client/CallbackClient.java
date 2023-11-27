@@ -1,9 +1,10 @@
 package agpg.client;
 
 // Importamos los paquetes y librerias necesarias
-import agpg.server.*;
-import java.rmi.*;
+import agpg.server.CallbackServerInterface;
+import java.rmi.Naming;
 import java.util.Scanner;
+import java.rmi.RemoteException;
 
 // Clase principal del cliente
 public class CallbackClient {
@@ -20,12 +21,21 @@ public class CallbackClient {
             CallbackServerInterface h = (CallbackServerInterface) Naming.lookup(registryURL);
             Scanner scanner = new Scanner(System.in);
             System.out.println("Introduce tu nombre de usuario:");
-            String name = scanner.nextLine();
-            CallbackClientInterface callbackObj = new CallbackClientImpl(name);
-            if (!h.registerCallback(callbackObj)) {
-                System.out.println("Usuario ya conectado: " + name);
+            String username = scanner.nextLine();
+            if (h.getClientMap().keySet().contains(username)) {
+                System.out.println("Usuario ya conectado: " + username);
                 System.exit(1);
             }
+            CallbackClientInterface callbackObj = new CallbackClientImpl(username);
+            h.registerCallback(callbackObj);
+            // Agregar un shutdown hook (es una opcion, lo podemos cambiar)
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    h.unregisterCallback(callbackObj);
+                } catch (RemoteException e) {
+                    System.out.println("Excepcion en el shutdown hook: " + e);
+                }
+            }));
             System.out.println("----- CHAT INICIADO -----");
             while (true) {
                 System.out.println("Mensaje (o 'EXIT'):");

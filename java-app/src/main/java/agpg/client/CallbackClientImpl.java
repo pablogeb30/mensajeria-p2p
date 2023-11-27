@@ -1,29 +1,34 @@
 package agpg.client;
 
 // Importamos las librerias necesarias
-import java.rmi.*;
-import java.rmi.server.*;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.rmi.RemoteException;
 
 // Implementacion de la interfaz del cliente
 public class CallbackClientImpl extends UnicastRemoteObject implements CallbackClientInterface {
 
     // Nombre del cliente
-    private String name;
+    private String username;
 
     // Mapa de clientes registrados
     private HashMap<String, CallbackClientInterface> clientMap = new HashMap<>();
 
+    // GUI del cliente
+    private CallbackClientGUI gui;
+
     // Constructor de la clase
-    public CallbackClientImpl(String name) throws RemoteException {
+    public CallbackClientImpl(String username) throws RemoteException {
         super();
+        this.username = username;
         clientMap = new HashMap<>();
-        this.name = name;
+        // Creamos la interfaz grafica pasandole el mapa de clientes
+        gui = new CallbackClientGUI();
     }
 
-    // Metodo ejecutado por un cliente para notificar al otro
-    public void notifyMe(String message) throws RemoteException {
-        System.out.println(message);
+    // Getter del nombre del cliente
+    public String getUsername() throws RemoteException {
+        return username;
     }
 
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
@@ -31,37 +36,43 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         System.out.println("Usuarios conectados (" + clientMap.size() + "):");
         System.out.println("--------------------------------------------------");
         for (CallbackClientInterface client : clientMap.values()) {
-            this.clientMap.put(client.getName(), client);
-            System.out.println(client.getName());
+            this.clientMap.put(client.getUsername(), client);
+            System.out.println(client.getUsername());
+            // Actualizamos la interfaz grafica anhadiendo los clientes
+            gui.addClient(client.getUsername());
         }
         System.out.println("--------------------------------------------------");
     }
 
     // Metodo ejecutado por el servidor para actualizar el mapa de clientes
     public void updateFriends(CallbackClientInterface cObject) throws RemoteException {
-        if (!(clientMap.containsKey(cObject.getName())) && !(cObject.getName().equals(this.getName()))) {
-            clientMap.put(cObject.getName(), cObject);
-            System.out.println("Nuevo usuario conectado: " + cObject.getName());
+        if (!(clientMap.containsKey(cObject.getUsername())) && !(cObject.getUsername().equals(this.getUsername()))) {
+            clientMap.put(cObject.getUsername(), cObject);
+            System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
+            // Actualizamos la interfaz grafica anhadiendo los clientes
+            gui.addClient(cObject.getUsername());
         } else {
-            if (!cObject.getName().equals(this.getName())) {
-                clientMap.remove(cObject.getName());
-                System.out.println("Usuario desconectado: " + cObject.getName());
+            if (!cObject.getUsername().equals(this.getUsername())) {
+                clientMap.remove(cObject.getUsername());
+                System.out.println("Usuario desconectado: " + cObject.getUsername());
+                // Actualizamos la interfaz grafica eliminando los clientes
+                gui.removeClient(cObject.getUsername());
             }
         }
     }
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
-    public void sendMessage(String name, String message) throws RemoteException {
-        if (!clientMap.containsKey(name)) {
-            System.out.println("No existe el usuario: " + name);
+    public void sendMessage(String username, String message) throws RemoteException {
+        if (!clientMap.containsKey(username)) {
+            System.out.println("No existe el usuario: " + username);
         } else {
-            clientMap.get(name).notifyMe(message);
+            clientMap.get(username).notifyMe(message);
         }
     }
 
-    // Getter del nombre del cliente
-    public String getName() throws RemoteException {
-        return name;
+    // Metodo ejecutado por un cliente para notificar al otro
+    public void notifyMe(String message) throws RemoteException {
+        System.out.println(message);
     }
 
 }

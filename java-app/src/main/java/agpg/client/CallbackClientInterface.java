@@ -1,14 +1,15 @@
 package agpg.client;
 
 // Importamos las librerias necesarias
-import java.rmi.*;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 
 // Interfaz del cliente
 public interface CallbackClientInterface extends Remote {
 
-    // Metodo ejecutado por un cliente para notificar a otro
-    public void notifyMe(String message) throws RemoteException;
+    // Getter del nombre del cliente
+    public String getUsername() throws RemoteException;
 
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
     public void setFriends(HashMap<String, CallbackClientInterface> clientMap) throws RemoteException;
@@ -17,9 +18,9 @@ public interface CallbackClientInterface extends Remote {
     public void updateFriends(CallbackClientInterface cObject) throws RemoteException;
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
-    public void sendMessage(String name, String message) throws RemoteException;
+    public void sendMessage(String username, String message) throws RemoteException;
 
-    // Getter del nombre del cliente
-    public String getName() throws RemoteException;
+    // Metodo ejecutado por un cliente para notificar a otro
+    public void notifyMe(String message) throws RemoteException;
 
 }
