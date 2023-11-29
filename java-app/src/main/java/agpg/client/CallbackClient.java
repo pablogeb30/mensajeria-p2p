@@ -36,16 +36,13 @@ public class CallbackClient {
                     System.out.println("Excepcion en el shutdown hook: " + e);
                 }
             }));
-            System.out.println("----- CHAT INICIADO -----");
+            // System.out.println("----- CHAT INICIADO -----");
             while (true) {
-                System.out.println("Mensaje (o 'EXIT'):");
+                System.out.println("Cliente listo (EXIT para salir)");
                 String input = scanner.nextLine();
                 if (input.equals("EXIT")) {
                     break;
                 }
-                System.out.println("Usuario:");
-                String receiver = scanner.nextLine();
-                callbackObj.sendMessage(receiver, input);
             }
             h.unregisterCallback(callbackObj);
             scanner.close();

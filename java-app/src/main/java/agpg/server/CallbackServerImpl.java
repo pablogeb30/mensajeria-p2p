@@ -37,9 +37,11 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
     // Este metodo cancela el registro de un cliente para que no reciba callbacks
     public synchronized void unregisterCallback(CallbackClientInterface cObject) throws RemoteException {
-        clientMap.remove(cObject.getUsername());
-        updateClientsCallback(cObject);
-        System.out.println("Usuario desconectado: " + cObject.getUsername());
+        if (clientMap.containsKey(cObject.getUsername())) {
+            clientMap.remove(cObject.getUsername());
+            updateClientsCallback(cObject);
+            System.out.println("Usuario desconectado: " + cObject.getUsername());
+        }
     }
 
     // Este metodo actualiza el mapa de clientes que tiene cada objeto cliente

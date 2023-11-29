@@ -18,9 +18,9 @@ public interface CallbackClientInterface extends Remote {
     public void updateFriends(CallbackClientInterface cObject) throws RemoteException;
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
-    public void sendMessage(String username, String message) throws RemoteException;
+    public void sendMessage(String message) throws RemoteException;
 
     // Metodo ejecutado por un cliente para notificar a otro
-    public void notifyMe(String message) throws RemoteException;
+    public void notifyMe(String username, String message) throws RemoteException;
 
 }
