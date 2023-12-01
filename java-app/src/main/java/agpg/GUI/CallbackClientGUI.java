@@ -3,11 +3,16 @@ package agpg.GUI;
 // Importamos los paquetes y librerias necesarias
 import agpg.client.CallbackClientImpl;
 import javax.swing.*;
+import javax.swing.text.StyledDocument;
 import java.awt.Font;
 import java.awt.BorderLayout;
-import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.text.BadLocationException;
 
 // Clase principal de GUI del cliente
 public class CallbackClientGUI extends JFrame {
@@ -22,7 +27,10 @@ public class CallbackClientGUI extends JFrame {
     private JPanel chatPanel;
 
     // Area de chat
-    private JTextArea chatArea;
+    private JTextPane chatPane;
+
+    // Documento del area de chat
+    private StyledDocument doc;
 
     // Campo de mensaje
     private JTextField messageField;
@@ -53,6 +61,7 @@ public class CallbackClientGUI extends JFrame {
         // Inicializamos el modelo y la vista de la lista de clientes
         listModel = new DefaultListModel<>();
         clientList = new JList<>(listModel);
+        clientList.setFocusable(false);
 
         // Anhadimos la lista de clientes a la ventana
         JScrollPane listScrollPane = new JScrollPane(clientList);
@@ -60,10 +69,17 @@ public class CallbackClientGUI extends JFrame {
         // Inicializamos el panel de chat
         chatPanel = new JPanel();
         chatPanel.setLayout(new BorderLayout());
-        chatArea = new JTextArea();
+        doc = new DefaultStyledDocument();
+        chatPane = new JTextPane();
+        chatPane.setDocument(doc);
+        chatPane.setFocusable(false);
 
         // Inicializamos el campo de mensaje (no editable)
         messageField = new JTextField();
+
+        // Definimos los atributos
+        SimpleAttributeSet attrs = new SimpleAttributeSet();
+        StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
 
         // Anhadimos un listener al campo de mensaje
         messageField.addActionListener(new ActionListener() {
@@ -79,8 +95,9 @@ public class CallbackClientGUI extends JFrame {
                         // Limpiamos el campo de mensaje
                         messageField.setText("");
                         // Mostramos el mensaje en el area de chat
-                        chatArea.append(clientObject.getUsername() + ": " + message + "\n");
-                    } catch (RemoteException e) {
+                        doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
+                        doc.insertString(doc.getLength(), clientObject.getUsername() + ": " + message + "\n", attrs);
+                    } catch (RemoteException | BadLocationException e) {
                         System.out.println("Excepcion al mandar el mensaje: " + e);
                     }
                 }
@@ -88,12 +105,14 @@ public class CallbackClientGUI extends JFrame {
         });
 
         // Anhadimos el area de chat y el campo de mensaje al panel de chat
-        chatPanel.add(new JScrollPane(chatArea), BorderLayout.CENTER);
+        chatPanel.add(new JScrollPane(chatPane), BorderLayout.CENTER);
         chatPanel.add(messageField, BorderLayout.SOUTH);
 
         // Configuramos el JSplitPane
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane, chatPanel);
         splitPane.setDividerLocation(300);
+        splitPane.setOneTouchExpandable(false);
+        splitPane.setDividerSize(0);
 
         // Anhadimos el JSplitPane a la ventana
         add(splitPane, BorderLayout.CENTER);
@@ -101,16 +120,6 @@ public class CallbackClientGUI extends JFrame {
         // Mostramos la ventana
         setVisible(true);
 
-    }
-
-    // Getter de la lista de clientes
-    public JList<String> getClientList() {
-        return clientList;
-    }
-
-    // Getter del area de chat
-    public JTextArea getChatArea() {
-        return chatArea;
     }
 
     // Metodo para anhadir clientes a la lista
@@ -121,6 +130,20 @@ public class CallbackClientGUI extends JFrame {
     // Metodo para eliminar clientes de la lista
     public void removeClient(String username) {
         listModel.removeElement(username);
+    }
+
+    // Metodo para seleccionar un cliente de la lista
+    public String selectClient() {
+        return clientList.getSelectedValue();
+    }
+
+    // Metodo para actualizar el area de chat
+    public void updateChat(String username, String message) {
+        try {
+            doc.insertString(doc.getLength(), username + ": " + message + "\n", null);
+        } catch (BadLocationException e) {
+            System.out.println("Excepcion al actualizar el area de chat: " + e);
+        }
     }
 
 }

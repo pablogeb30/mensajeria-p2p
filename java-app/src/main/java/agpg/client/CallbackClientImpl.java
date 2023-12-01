@@ -64,7 +64,7 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
     public void sendMessage(String message) throws RemoteException {
-        String selectedUser = gui.getClientList().getSelectedValue();
+        String selectedUser = gui.selectClient();
         if (selectedUser == null) {
             System.out.println("No se ha seleccionado ningun usuario");
             return;
@@ -76,7 +76,7 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
     public void notifyMe(String username, String message) throws RemoteException {
         // System.out.println(message);
         // Actualizamos la interfaz grafica mostrando el mensaje
-        gui.getChatArea().append(username + ": " + message + "\n");
+        gui.updateChat(username, message);
     }
 
 }
