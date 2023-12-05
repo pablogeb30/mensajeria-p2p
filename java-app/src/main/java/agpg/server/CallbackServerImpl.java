@@ -1,7 +1,9 @@
 package agpg.server;
 
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,7 +12,6 @@ import java.sql.SQLException;
 import agpg.client.CallbackClientInterface;
 import java.rmi.RemoteException;
 import org.mindrot.jbcrypt.BCrypt;
-
 
 public class CallbackServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
@@ -48,7 +49,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
     }
 
     // Método para iniciar sesión
-    public boolean iniciarSesion(String username, String password, CallbackClientInterface cObject) throws RemoteException {
+    public boolean iniciarSesion(String username, String password, CallbackClientInterface cObject)
+            throws RemoteException {
         // Conectar a la base de datos
         try (Connection conn = conectarBD()) {
             // Verificar si el usuario existe
@@ -160,6 +162,54 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             System.err.println("Error al rechazar solicitud de amistad: " + e.getMessage());
             throw new RemoteException("Error al rechazar solicitud de amistad", e);
         }
+    }
+
+    // Método para obtener una lista de usuarios recomendados para enviar
+    // solicitudes de amistad
+    public List<String> obtenerUsuariosRecomendados(String username) throws RemoteException {
+
+        // Obtener el ID del usuario actual
+        int userID = obtenerUserID(username);
+
+        List<String> usuariosRecomendados = new ArrayList<>();
+        String sql = "SELECT Username FROM Usuarios WHERE UserID != ? LIMIT 10"; // Obtener 10 usuarios al azar que no
+                                                                                 // sean el usuario actual
+
+        try (Connection conn = conectarBD();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userID);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String usernameAmigo = rs.getString("Username");
+                    usuariosRecomendados.add(usernameAmigo);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener usuarios recomendados: " + e.getMessage());
+            throw new RemoteException("Error al obtener usuarios recomendados", e);
+        }
+
+        return usuariosRecomendados;
+    }
+
+    // Metodo privado para obtener el ID de un usuario a partir de su nombre
+    private int obtenerUserID(String username) throws RemoteException {
+        String sql = "SELECT UserID FROM Usuarios WHERE Username = ?;";
+        try (Connection conn = conectarBD();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("UserID");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener el ID del usuario: " + e.getMessage());
+            throw new RemoteException("Error al obtener el ID del usuario", e);
+        }
+        return 0;
     }
 
     /*
