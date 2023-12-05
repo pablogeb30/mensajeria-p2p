@@ -1,15 +1,12 @@
 package agpg.client;
 
-// Importamos los paquetes y librerias necesarias
 import agpg.server.CallbackServerInterface;
 import java.rmi.Naming;
 import java.util.Scanner;
 import java.rmi.RemoteException;
 
-// Clase principal del cliente
 public class CallbackClient {
 
-    // Metodo principal
     public static void main(String args[]) {
 
         try {
@@ -19,40 +16,68 @@ public class CallbackClient {
                 System.out.println("Uso: java CallbackClient <serverHost>");
                 System.exit(1);
             }
-            // Obtenemos la referencia al objeto servidor
-            String registryURL = "rmi://" + args[0] + ":1099/callback";
-            CallbackServerInterface h = (CallbackServerInterface) Naming.lookup(registryURL);
-
-            // Pedimos el nombre de usuario
+            String serverHost = args[0];
+            String registryURL = "rmi://" + serverHost + ":1099/callback";
+            CallbackServerInterface server = (CallbackServerInterface) Naming.lookup(registryURL);
             Scanner scanner = new Scanner(System.in);
-            System.out.println("Introduce tu nombre de usuario:");
-            String username = scanner.nextLine();
-            scanner.close();
 
-            // Comprobamos que el nombre de usuario no este ya en uso
-            if (h.getClientMap().keySet().contains(username)) {
-                System.out.println("Usuario ya conectado: " + username);
+            System.out.println("¿Eres un usuario nuevo? (sí/no)");
+            String respuesta = scanner.nextLine().trim().toLowerCase();
+            String username;
+            boolean registrado = false;
+
+            if ("sí".equals(respuesta) || "si".equals(respuesta)) {
+                // Registro de nuevo usuario
+                System.out.println("Registrar nuevo usuario.");
+                System.out.println("Introduce tu nombre de usuario:");
+                username = scanner.nextLine();
+                System.out.println("Introduce tu contraseña:");
+                String password = scanner.nextLine();
+                
+                registrado = server.registrarCliente(username, password);
+            } else {
+                // Inicio de sesión
+                System.out.println("Iniciar sesión.");
+                System.out.println("Introduce tu nombre de usuario:");
+                username = scanner.nextLine();
+                System.out.println("Introduce tu contraseña:");
+                String password = scanner.nextLine();
+
+                registrado = server.iniciarSesion(username, password, new CallbackClientImpl(username));
+            }
+
+            if (!registrado) {
+                System.out.println("No se pudo registrar o iniciar sesión.");
                 System.exit(1);
             }
 
-            // Creamos el objeto cliente y lo registramos en el servidor
             CallbackClientInterface callbackObj = new CallbackClientImpl(username);
-            h.registerCallback(callbackObj);
-            System.out.println("Cliente listo (CTRL-C para salir)");
+            server.registerCallback(callbackObj);
 
-            // Agregamos un shutdown hook
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
-                    h.unregisterCallback(callbackObj);
+                    server.unregisterCallback(callbackObj);
                 } catch (RemoteException e) {
-                    System.out.println("Excepcion en el shutdown hook: " + e.getMessage());
+                    System.out.println("Excepción en el shutdown hook: " + e);
                 }
             }));
 
+            while (true) {
+                System.out.println("Cliente listo (EXIT para salir, FRIENDS para ver amigos)");
+                String input = scanner.nextLine();
+                if ("EXIT".equalsIgnoreCase(input)) {
+                    break;
+                } else if ("FRIENDS".equalsIgnoreCase(input)) {
+                    
+                }
+            }
+
+            server.unregisterCallback(callbackObj);
+            scanner.close();
+            System.exit(0);
         } catch (Exception e) {
-            System.out.println("Excepcion en el main de CallbackClient: " + e.getMessage());
+            System.out.println("Excepción en el main de CallbackClient: " + e);
         }
 
     }
-
 }
