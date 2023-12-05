@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense para saber los atributos posibles.
+    // Mantenga el puntero para ver las descripciones de los existentes atributos.
+    // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "CallbackClient",
+            "request": "launch",
+            "mainClass": "agpg.client.CallbackClient",
+            "projectName": "java-app",
+            "args": "localhost"
+        },
+        {
+            "type": "java",
+            "name": "CallbackServer",
+            "request": "launch",
+            "mainClass": "agpg.server.CallbackServer",
+            "projectName": "java-app"
+        }
+    ]
+}
