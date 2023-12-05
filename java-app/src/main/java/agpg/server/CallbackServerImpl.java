@@ -51,7 +51,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                 client.updateFriends(cObject);
             }
         } catch (RemoteException e) {
-            System.out.println("Excepcion en updateClientsCallback: " + e);
+            System.out.println("Excepcion en updateClientsCallback: " + e.getMessage());
         }
 
     }

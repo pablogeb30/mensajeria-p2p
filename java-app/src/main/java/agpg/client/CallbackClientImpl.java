@@ -23,7 +23,7 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         super();
         this.username = username;
         clientMap = new HashMap<>();
-        // Creamos la interfaz grafica pasandole el mapa de clientes
+        // Creamos la interfaz grafica pasandole la referencia al objeto cliente
         gui = new CallbackClientGUI(this);
     }
 
@@ -32,17 +32,18 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         return username;
     }
 
+    // Getter del mapa de clientes
+    public HashMap<String, CallbackClientInterface> getClientMap() throws RemoteException {
+        return clientMap;
+    }
+
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
     public void setFriends(HashMap<String, CallbackClientInterface> clientMap) throws RemoteException {
-        // System.out.println("Usuarios conectados (" + clientMap.size() + "):");
-        // System.out.println("--------------------------------------------------");
         for (CallbackClientInterface client : clientMap.values()) {
             this.clientMap.put(client.getUsername(), client);
-            // System.out.println(client.getUsername());
             // Actualizamos la interfaz grafica anhadiendo los clientes
             gui.addClient(client.getUsername());
         }
-        // System.out.println("--------------------------------------------------");
     }
 
     // Metodo ejecutado por el servidor para actualizar el mapa de clientes
@@ -64,17 +65,19 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
     public void sendMessage(String message) throws RemoteException {
+        // Obtenemos el cliente seleccionado
         String selectedUser = gui.selectClient();
+        // Comprobamos que se haya seleccionado un cliente
         if (selectedUser == null) {
             System.out.println("No se ha seleccionado ningun usuario");
             return;
         }
+        // Llamamos al metodo notifyMe del cliente seleccionado
         clientMap.get(selectedUser).notifyMe(this.getUsername(), message);
     }
 
     // Metodo ejecutado por un cliente para notificar al otro
     public void notifyMe(String username, String message) throws RemoteException {
-        // System.out.println(message);
         // Actualizamos la interfaz grafica mostrando el mensaje
         gui.updateChat(username, message);
     }

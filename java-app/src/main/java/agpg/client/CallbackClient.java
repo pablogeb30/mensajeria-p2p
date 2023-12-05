@@ -11,45 +11,48 @@ public class CallbackClient {
 
     // Metodo principal
     public static void main(String args[]) {
+
         try {
+
+            // Comprobamos que el numero de argumentos sea correcto
             if (args.length != 1) {
                 System.out.println("Uso: java CallbackClient <serverHost>");
                 System.exit(1);
             }
-            String serverHost = args[0];
-            String registryURL = "rmi://" + serverHost + ":1099/callback";
+            // Obtenemos la referencia al objeto servidor
+            String registryURL = "rmi://" + args[0] + ":1099/callback";
             CallbackServerInterface h = (CallbackServerInterface) Naming.lookup(registryURL);
+
+            // Pedimos el nombre de usuario
             Scanner scanner = new Scanner(System.in);
             System.out.println("Introduce tu nombre de usuario:");
             String username = scanner.nextLine();
+            scanner.close();
+
+            // Comprobamos que el nombre de usuario no este ya en uso
             if (h.getClientMap().keySet().contains(username)) {
                 System.out.println("Usuario ya conectado: " + username);
                 System.exit(1);
             }
+
+            // Creamos el objeto cliente y lo registramos en el servidor
             CallbackClientInterface callbackObj = new CallbackClientImpl(username);
             h.registerCallback(callbackObj);
-            // Agregar un shutdown hook (es una opcion, lo podemos cambiar)
+            System.out.println("Cliente listo (CTRL-C para salir)");
+
+            // Agregamos un shutdown hook
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     h.unregisterCallback(callbackObj);
                 } catch (RemoteException e) {
-                    System.out.println("Excepcion en el shutdown hook: " + e);
+                    System.out.println("Excepcion en el shutdown hook: " + e.getMessage());
                 }
             }));
-            // System.out.println("----- CHAT INICIADO -----");
-            while (true) {
-                System.out.println("Cliente listo (EXIT para salir)");
-                String input = scanner.nextLine();
-                if (input.equals("EXIT")) {
-                    break;
-                }
-            }
-            h.unregisterCallback(callbackObj);
-            scanner.close();
-            System.exit(0);
+
         } catch (Exception e) {
-            System.out.println("Excepcion en el main de CallbackClient: " + e);
+            System.out.println("Excepcion en el main de CallbackClient: " + e.getMessage());
         }
+
     }
 
 }

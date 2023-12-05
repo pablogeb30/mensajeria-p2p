@@ -11,6 +11,9 @@ public interface CallbackClientInterface extends Remote {
     // Getter del nombre del cliente
     public String getUsername() throws RemoteException;
 
+    // Getter del mapa de clientes
+    public HashMap<String, CallbackClientInterface> getClientMap() throws RemoteException;
+
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
     public void setFriends(HashMap<String, CallbackClientInterface> clientMap) throws RemoteException;
 

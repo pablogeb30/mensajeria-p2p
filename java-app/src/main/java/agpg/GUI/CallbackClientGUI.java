@@ -1,18 +1,10 @@
 package agpg.GUI;
 
-// Importamos los paquetes y librerias necesarias
+// Importamos las librerias necesarias
 import agpg.client.CallbackClientImpl;
 import javax.swing.*;
-import javax.swing.text.StyledDocument;
-import java.awt.Font;
+import javax.swing.text.*;
 import java.awt.BorderLayout;
-import java.rmi.RemoteException;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.text.BadLocationException;
 
 // Clase principal de GUI del cliente
 public class CallbackClientGUI extends JFrame {
@@ -21,97 +13,48 @@ public class CallbackClientGUI extends JFrame {
     private DefaultListModel<String> listModel;
 
     // Vista de la lista de clientes
-    private JList<String> clientList;
+    private ClientList<String> clientList;
 
-    // Panel de chat
-    private JPanel chatPanel;
-
-    // Area de chat
-    private JTextPane chatPane;
-
-    // Documento del area de chat
+    // Estilo del documento
     private StyledDocument doc;
 
     // Campo de mensaje
-    private JTextField messageField;
-
-    // JSplitPane para dividir la ventana
-    private JSplitPane splitPane;
+    private MessageField messageField;
 
     // Constructor de la clase
     public CallbackClientGUI(CallbackClientImpl clientObject) {
 
-        // Creamos la ventana principal
-        setTitle("ChatApp");
+        // Definimos el tamanho de la ventana y la operacion de cierre
         setSize(1000, 650);
-
-        // Definimos operacion de cierre
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Anhadimos un titulo a la ventana
-        try {
-            JLabel titleLabel = new JLabel(clientObject.getUsername());
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-            titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            add(titleLabel, BorderLayout.NORTH);
-        } catch (RemoteException e) {
-            System.out.println("Excepcion al obtener el nombre de usuario: " + e);
-        }
-
-        // Inicializamos el modelo y la vista de la lista de clientes
-        listModel = new DefaultListModel<>();
-        clientList = new JList<>(listModel);
-        clientList.setFocusable(false);
-
-        // Anhadimos la lista de clientes a la ventana
-        JScrollPane listScrollPane = new JScrollPane(clientList);
+        // Inicializamos el estilo del documento y el campo de mensaje
+        doc = new DefaultStyledDocument();
+        messageField = new MessageField(clientObject, doc);
+        messageField.setVisible(false);
 
         // Inicializamos el panel de chat
-        chatPanel = new JPanel();
+        JTextPane chatPane = new JTextPane();
+        JPanel chatPanel = new JPanel();
         chatPanel.setLayout(new BorderLayout());
-        doc = new DefaultStyledDocument();
-        chatPane = new JTextPane();
         chatPane.setDocument(doc);
         chatPane.setFocusable(false);
 
-        // Inicializamos el campo de mensaje (no editable)
-        messageField = new JTextField();
+        // Inicializamos el modelo y la vista de la lista de clientes
+        listModel = new DefaultListModel<>();
+        clientList = new ClientList<>(listModel, clientObject, messageField, chatPane);
 
-        // Definimos los atributos
-        SimpleAttributeSet attrs = new SimpleAttributeSet();
-        StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
-
-        // Anhadimos un listener al campo de mensaje
-        messageField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                // Obtenemos el mensaje del campo de mensaje
-                String message = messageField.getText();
-                // Comprobamos que el mensaje no este vacio
-                if (!message.trim().isEmpty()) {
-                    try {
-                        // Llamamos al metodo sendMessage del objeto cliente
-                        clientObject.sendMessage(message);
-                        // Limpiamos el campo de mensaje
-                        messageField.setText("");
-                        // Mostramos el mensaje en el area de chat
-                        doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
-                        doc.insertString(doc.getLength(), clientObject.getUsername() + ": " + message + "\n", attrs);
-                    } catch (RemoteException | BadLocationException e) {
-                        System.out.println("Excepcion al mandar el mensaje: " + e);
-                    }
-                }
-            }
-        });
+        // Incluimos la lista dentro de un JScrollPane
+        JScrollPane listScrollPane = new JScrollPane(clientList);
 
         // Anhadimos el area de chat y el campo de mensaje al panel de chat
         chatPanel.add(new JScrollPane(chatPane), BorderLayout.CENTER);
         chatPanel.add(messageField, BorderLayout.SOUTH);
+        clientList.setChatPanel(chatPanel);
 
         // Configuramos el JSplitPane
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane, chatPanel);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScrollPane, chatPanel);
         splitPane.setDividerLocation(300);
-        splitPane.setOneTouchExpandable(false);
         splitPane.setDividerSize(0);
 
         // Anhadimos el JSplitPane a la ventana
@@ -142,7 +85,7 @@ public class CallbackClientGUI extends JFrame {
         try {
             doc.insertString(doc.getLength(), username + ": " + message + "\n", null);
         } catch (BadLocationException e) {
-            System.out.println("Excepcion al actualizar el area de chat: " + e);
+            System.out.println("Excepcion al actualizar el area de chat: " + e.getMessage());
         }
     }
 

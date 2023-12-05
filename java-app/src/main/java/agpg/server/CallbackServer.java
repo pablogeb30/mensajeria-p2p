@@ -14,13 +14,17 @@ public class CallbackServer {
 
     // Metodo principal
     public static void main(String args[]) {
+
         try {
+
+            // Inicializamos el registro RMI y exportamos el objeto servidor
             startRegistry(RMIPORT);
             CallbackServerImpl exportedObj = new CallbackServerImpl();
             Naming.rebind(REGISTRYURL, exportedObj);
             System.out.println("Servidor listo (CTRL-C para salir)");
+
         } catch (Exception e) {
-            System.out.println("Excepcion en el main de CallbackServer: " + e);
+            System.out.println("Excepcion en el main de CallbackServer: " + e.getMessage());
         }
 
     }
