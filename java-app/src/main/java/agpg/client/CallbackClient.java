@@ -65,6 +65,21 @@ public class CallbackClient {
                 if ("EXIT".equalsIgnoreCase(input)) {
                     break;
                 } else if ("FRIENDS".equalsIgnoreCase(input)) {
+
+                    // Obtner lista de pososibles amigos
+                    System.out.println("Lista de posibles amigos:");
+                    System.out.println(server.obtenerUsuariosRecomendados(username));
+
+                    // Preguntamos si desea mandar una solicitud de amistad a alguno de ellos
+                    System.out.println("¿Desea mandar una solicitud de amistad? (sí/no)");
+                    respuesta = scanner.nextLine().trim().toLowerCase();
+
+                    if ("sí".equals(respuesta) || "si".equals(respuesta)) {
+                        // Mandar solicitud de amistad
+                        System.out.println("Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
+                        int friendID = scanner.nextInt();
+                        server.enviarSolicitudAmistad(username, friendID);
+                    }
                     
                 }
             }
