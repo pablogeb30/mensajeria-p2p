@@ -1,0 +1,1 @@
+{"resources":{"Scripts/CreacionTablas.sql":{"default-schema":"public","default-datasource":"postgres-jdbc-18c25681b5e-74b4d26001dfa0bd","default-catalog":"usuariosChat"},"Scripts/Script.sql":{"default-datasource":"postgres-jdbc-18c25681b5e-74b4d26001dfa0bd","default-catalog":"usuariosChat","default-schema":"public"}}}
