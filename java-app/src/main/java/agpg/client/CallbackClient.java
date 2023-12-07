@@ -33,7 +33,7 @@ public class CallbackClient {
                 username = scanner.nextLine();
                 System.out.println("Introduce tu contraseña:");
                 String password = scanner.nextLine();
-                
+
                 registrado = server.registrarCliente(username, password);
             } else {
                 // Inicio de sesión
@@ -51,6 +51,7 @@ public class CallbackClient {
                 System.exit(1);
             }
 
+            
             CallbackClientInterface callbackObj = new CallbackClientImpl(username);
             server.registerCallback(callbackObj);
 
@@ -63,27 +64,75 @@ public class CallbackClient {
             }));
 
             while (true) {
-                System.out.println("Cliente listo (EXIT para salir, FRIENDS para ver amigos)");
-                String input = scanner.nextLine();
-                if ("EXIT".equalsIgnoreCase(input)) {
+                System.out.println("¿Qué desea hacer? (sugerencias/amigos/solicitudes/cambiar contrasena/exit)");
+                String input = scanner.nextLine().toUpperCase();
+                switch (input) {
+                    case "EXIT":
+                        break;
+
+                    case "CAMBIAR CONTRASENA":
+                        System.out.println("Introduce tu contraseña actual:");
+                        String password = scanner.nextLine();
+                        System.out.println("Introduce tu nueva contraseña:");
+                        String newPassword = scanner.nextLine();
+                        if (server.cambiarPassword(username, password, newPassword)) {
+                            System.out.println("Contraseña cambiada correctamente.");
+                        } else {
+                            System.out.println("No se pudo cambiar la contraseña.");
+                        }
+                        break;
+
+                    case "SUGERENCIAS":
+                        // Obtner lista de pososibles amigos
+                        System.out.println("Lista de posibles amigos:");
+                        System.out.println(server.obtenerUsuariosRecomendados(username));
+
+                        // Preguntamos si desea mandar una solicitud de amistad a alguno de ellos
+                        System.out.println("¿Desea mandar una solicitud de amistad? (sí/no)");
+                        respuesta = scanner.nextLine().trim().toLowerCase();
+
+                        if ("sí".equals(respuesta) || "si".equals(respuesta)) {
+                            // Mandar solicitud de amistad
+                            System.out.println("Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
+                            String friendName = scanner.nextLine();
+                            server.enviarSolicitudAmistad(username, friendName);
+                        }
+                        break;
+                    case "AMIGOS":
+                        System.out.println("Lista de amigos:");
+                        System.out.println(server.obtenerAmigos(username));
+                        break;
+                    case "SOLICITUDES":
+                        System.out.println("Lista de solicitudes de amistad pendientes:");
+                        System.out.println(server.obtenerSolicitudesAmistad(username));
+
+                        System.out.println("¿Desea aceptar alguna solicitud de amistad? (sí/no)");
+                        respuesta = scanner.nextLine().trim().toLowerCase();
+
+                        if ("sí".equals(respuesta) || "si".equals(respuesta)) {
+                            // Aceptar solicitud de amistad
+                            System.out.println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
+                            String friendName = scanner.nextLine();
+                            server.aceptarSolicitudAmistad(username, friendName);
+                        }
+
+                        // Preguntamos si desea rechazar alguna de ellas
+                        System.out.println("¿Desea rechazar alguna solicitud de amistad? (sí/no)");
+                        respuesta = scanner.nextLine().trim().toLowerCase();
+
+                        if ("sí".equals(respuesta) || "si".equals(respuesta)) {
+                            // Rechazar solicitud de amistad
+                            System.out.println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
+                            String friendName = scanner.nextLine();
+                            server.rechazarSolicitudAmistad(username, friendName);
+                        }
+                        break;
+                    default:
+                        System.out.println("Opción inválida. Por favor, intente nuevamente.");
+                        break;
+                }
+                if ("EXIT".equals(input)) {
                     break;
-                } else if ("FRIENDS".equalsIgnoreCase(input)) {
-
-                    // Obtner lista de pososibles amigos
-                    System.out.println("Lista de posibles amigos:");
-                    System.out.println(server.obtenerUsuariosRecomendados(username));
-
-                    // Preguntamos si desea mandar una solicitud de amistad a alguno de ellos
-                    System.out.println("¿Desea mandar una solicitud de amistad? (sí/no)");
-                    respuesta = scanner.nextLine().trim().toLowerCase();
-
-                    if ("sí".equals(respuesta) || "si".equals(respuesta)) {
-                        // Mandar solicitud de amistad
-                        System.out.println("Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
-                        int friendID = scanner.nextInt();
-                        server.enviarSolicitudAmistad(username, friendID);
-                    }
-                    
                 }
             }
 
@@ -95,4 +144,5 @@ public class CallbackClient {
         }
 
     }
+
 }
