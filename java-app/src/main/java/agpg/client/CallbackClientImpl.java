@@ -1,10 +1,10 @@
 package agpg.client;
 
-// Importamos los paquetes y librerias necesarias
+// Importamos las librerias necesarias (GUI, RMI y HashMap)
 import agpg.GUI.CallbackClientGUI;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 
 // Implementacion de la interfaz del cliente
 public class CallbackClientImpl extends UnicastRemoteObject implements CallbackClientInterface {

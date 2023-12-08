@@ -1,6 +1,6 @@
 package agpg.GUI;
 
-// Importamos las librerias necesarias
+// Importamos las librerias necesarias (CallbackClientImpl, Swing y awt)
 import agpg.client.CallbackClientImpl;
 import javax.swing.*;
 import javax.swing.text.*;

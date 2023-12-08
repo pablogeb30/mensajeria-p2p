@@ -1,54 +1,58 @@
 package agpg.server;
 
+// Importamos las librerias necesarias (RMI, SQL, HashMap, CallbackClientInterface y BCrypt)
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import agpg.client.CallbackClientInterface;
 import java.rmi.RemoteException;
+import java.sql.*;
+import java.util.HashMap;
+import agpg.client.CallbackClientInterface;
 import org.mindrot.jbcrypt.BCrypt;
 
-
+// Implementacion de la interfaz del servidor
 public class CallbackServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
+    // Mapa de clientes registrados y credenciales de la base de datos
     private HashMap<String, CallbackClientInterface> clientMap;
     private String dbURL = "jdbc:postgresql://localhost:5432/usuariosChat";
     private String dbUsername = "postgres";
     private String dbPassword = "myPassword";
 
+    // Constructor de la clase
     public CallbackServerImpl() throws RemoteException {
         super();
         clientMap = new HashMap<>();
-        // Inicializar la conexión a la base de datos, si es necesario
     }
 
+    // Metodo de conexion a la base de datos
     private Connection conectarBD() throws SQLException {
         return DriverManager.getConnection(dbURL, dbUsername, dbPassword);
     }
 
+    // Metodo que registra a un cliente para que reciba callbacks
     public synchronized void registerCallback(CallbackClientInterface cObject) throws RemoteException {
         if (!(clientMap.containsKey(cObject.getUsername()))) {
-            // Aquí, en lugar de solo añadir el cliente al mapa, también podrías verificar
-            // en la base de datos
+            // En vez de anhadir al mapa, revisar base de datos (consulta SQL)
+            cObject.setFriends(clientMap);
             clientMap.put(cObject.getUsername(), cObject);
+            updateClientsCallback(cObject);
             System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
         } else {
             System.out.println("Usuario ya conectado: " + cObject.getUsername());
         }
     }
 
+    // Metodo que cancela el registro de un cliente para que no reciba callbacks
     public synchronized void unregisterCallback(CallbackClientInterface cObject) throws RemoteException {
         if (clientMap.containsKey(cObject.getUsername())) {
             clientMap.remove(cObject.getUsername());
+            updateClientsCallback(cObject);
             System.out.println("Usuario desconectado: " + cObject.getUsername());
         }
     }
 
-    // Método para iniciar sesión
-    public boolean iniciarSesion(String username, String password, CallbackClientInterface cObject) throws RemoteException {
+    // Metodo para iniciar sesion
+    public boolean iniciarSesion(String username, String password)
+            throws RemoteException {
         // Conectar a la base de datos
         try (Connection conn = conectarBD()) {
             // Verificar si el usuario existe
@@ -56,7 +60,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                 return false; // Usuario no existe
             }
 
-            // Verificar si la contraseña es correcta
+            // Verificar si la contrasenha es correcta
             String sql = "SELECT Password FROM Usuarios WHERE Username = ?;";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, username);
@@ -64,21 +68,20 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                     if (rs.next()) {
                         String hashedPassword = rs.getString(1);
                         if (BCrypt.checkpw(password, hashedPassword)) {
-                            // Contraseña correcta
-                            registerCallback(cObject);
+                            // Contrasenha correcta
                             return true;
                         }
                     }
                 }
             }
-            return false; // Contraseña incorrecta
+            return false; // Contrasenha incorrecta
         } catch (SQLException e) {
             System.err.println("Error al iniciar sesión: " + e.getMessage());
             throw new RemoteException("Error al iniciar sesión", e);
         }
     }
 
-    // Método para registrar un nuevo cliente
+    // Metodo para registrar un nuevo cliente
     public boolean registrarCliente(String username, String password) throws RemoteException {
         // Conectar a la base de datos
         try (Connection conn = conectarBD()) {
@@ -91,9 +94,9 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             String sql = "INSERT INTO Usuarios (Username, Password) VALUES (?, ?);";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, username);
-                pstmt.setString(2, hashPassword(password)); // Asegúrate de cifrar o hashear la contraseña
+                pstmt.setString(2, hashPassword(password)); // Asegurate de cifrar o hashear la contrasenha
                 pstmt.executeUpdate();
-                return true; // Usuario registrado con éxito
+                return true; // Usuario registrado con exito
             }
         } catch (SQLException e) {
             System.err.println("Error al registrar el cliente: " + e.getMessage());
@@ -101,7 +104,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-    // Método auxiliar para verificar si un usuario ya existe
+    // Metodo auxiliar para verificar si un usuario ya existe
     private boolean usuarioYaExiste(String username, Connection conn) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Usuarios WHERE Username = ?;";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -115,12 +118,12 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         return false;
     }
 
-    // Método auxiliar para cifrar o hashear la contraseña
+    // Metodo auxiliar para cifrar o hashear la contrasenha
     private String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
-    // Método para enviar solicitud de amistad
+    // Metodo para enviar solicitud de amistad
     public void enviarSolicitudAmistad(int userID, int friendID) throws RemoteException {
         String sql = "INSERT INTO Amigos (UserID1, UserID2, EstadoAmistad) VALUES (?, ?, 'pendiente');";
         try (Connection conn = conectarBD();
@@ -134,7 +137,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-    // Método para aceptar solicitud de amistad
+    // Metodo para aceptar solicitud de amistad
     public void aceptarSolicitudAmistad(int userID, int friendID) throws RemoteException {
         String sql = "UPDATE Amigos SET EstadoAmistad = 'aceptada' WHERE UserID1 = ? AND UserID2 = ?;";
         try (Connection conn = conectarBD();
@@ -148,7 +151,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-    // Método para rechazar solicitud de amistad
+    // Metodo para rechazar solicitudes de amistad
     public void rechazarSolicitudAmistad(int userID, int friendID) throws RemoteException {
         String sql = "UPDATE Amigos SET EstadoAmistad = 'rechazada' WHERE UserID1 = ? AND UserID2 = ?;";
         try (Connection conn = conectarBD();
@@ -162,17 +165,15 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-    /*
-     * private void updateClientsCallback(CallbackClientInterface cObject) {
-     * try {
-     * for (CallbackClientInterface client : clientMap.values()) {
-     * client.updateFriends(cObject);
-     * }
-     * } catch (RemoteException e) {
-     * System.out.println("Excepcion en updateClientsCallback: " + e);
-     * }
-     * 
-     * }
-     */
+    // Metodo que llama al metodo remoto del cliente para actualizar los amigos
+    private void updateClientsCallback(CallbackClientInterface cObject) {
+        try {
+            for (CallbackClientInterface client : clientMap.values()) {
+                client.updateFriends(cObject);
+            }
+        } catch (RemoteException e) {
+            System.out.println("Excepcion en updateClientsCallback: " + e);
+        }
+    }
 
 }

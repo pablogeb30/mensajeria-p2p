@@ -1,18 +1,18 @@
 package agpg.GUI;
 
-// Importamos las librerias necesarias
+// Importamos las librerias necesarias (Swing, CallbackClientImpl, awt y RMI)
 import javax.swing.*;
-import agpg.client.CallbackClientImpl;
 import javax.swing.text.*;
+import agpg.client.CallbackClientImpl;
 import java.awt.Font;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.rmi.RemoteException;
 import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.rmi.RemoteException;
 
 // Clase del campo de mensaje
 public class MessageField extends JTextField {
@@ -31,7 +31,7 @@ public class MessageField extends JTextField {
         setText(" Escribe un mensaje");
         setForeground(Color.GRAY);
 
-        // Anhadimos un listener al campo de mensaje
+        // Anhadimos un listener de accion al campo de mensaje
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -54,6 +54,7 @@ public class MessageField extends JTextField {
             }
         });
 
+        // Anhadimos un listener de teclado al campo de mensaje
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -64,6 +65,7 @@ public class MessageField extends JTextField {
             }
         });
 
+        // Anhadimos un listener de foco al campo de mensaje
         addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {

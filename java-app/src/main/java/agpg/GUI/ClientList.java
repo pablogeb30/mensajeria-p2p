@@ -1,13 +1,12 @@
 package agpg.GUI;
 
-// Importamos las librerias necesarias
+// Importamos las librerias necesarias (Swing, CallbackClientImpl, awt y RMI)
 import javax.swing.*;
-import agpg.client.CallbackClientImpl;
-import java.awt.Font;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-
+import agpg.client.CallbackClientImpl;
+import java.awt.Font;
 import java.rmi.RemoteException;
 
 // Clase de la vista de la lista de cliente
@@ -46,7 +45,7 @@ public class ClientList<T> extends JList<T> {
                         // T selectedClient = getSelectedValue();
                         messageField.setVisible(true);
                         chatPanel.revalidate();
-                        // TODO: abrir chat con selectedClient
+                        // abrir chat con selectedClient
                     } else {
                         chatPane.setFont(new Font("Arial", Font.BOLD, 18));
                         chatPane.setText("NO HAY NINGUN USUARIO SELECCIONADO");
@@ -59,6 +58,7 @@ public class ClientList<T> extends JList<T> {
 
     }
 
+    // Setter del panel de chat
     public void setChatPanel(JPanel chatPanel) {
         this.chatPanel = chatPanel;
     }

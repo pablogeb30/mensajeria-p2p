@@ -1,6 +1,6 @@
 package agpg.client;
 
-// Importamos las librerias necesarias
+// Importamos las librerias necesarias (RMI y HashMap)
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;
