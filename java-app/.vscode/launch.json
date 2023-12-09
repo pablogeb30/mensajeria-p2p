@@ -4,7 +4,6 @@
     // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
             "type": "java",
             "name": "Current File",
@@ -25,6 +24,14 @@
             "request": "launch",
             "mainClass": "agpg.server.CallbackServer",
             "projectName": "java-app"
+        },
+        {
+            "type": "java",
+            "name": "ClienteNOtls",
+            "request": "launch",
+            "mainClass": "agpg.client.ClienteNOtls",
+            "projectName": "java-app",
+            "args": "localhost"
         }
     ]
 }

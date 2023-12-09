@@ -4,35 +4,12 @@ import agpg.server.CallbackServerInterface;
 import java.rmi.Naming;
 import java.util.Scanner;
 import java.rmi.RemoteException;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
-import java.security.KeyStore;
-import java.io.FileInputStream;
-import java.security.SecureRandom;
 
-public class CallbackClient {
+
+public class ClienteNOtls {
 
     public static void main(String args[]) {
         try {
-            // Configuración SSL
-            System.setProperty("javax.net.ssl.trustStore", "truststoreCodis.jks");
-            System.setProperty("javax.net.ssl.trustStorePassword", "Codis2023");
-
-
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            ks.load(new FileInputStream("keystoreCodis.jks"), "Codis2023".toCharArray());
-            kmf.init(ks, "Codis2023".toCharArray());
-
-            KeyStore ts = KeyStore.getInstance(KeyStore.getDefaultType());
-            ts.load(new FileInputStream("truststoreCodis.jks"), "Codis2023".toCharArray());
-            tmf.init(ts);
-
-            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
 
             // Comprobamos que el numero de argumentos sea correcto
             if (args.length != 1) {
@@ -153,7 +130,6 @@ public class CallbackClient {
                         System.out.println("Opción inválida. Por favor, intente nuevamente.");
                         break;
                 }
-
                 if ("EXIT".equals(input)) {
                     break;
                 }

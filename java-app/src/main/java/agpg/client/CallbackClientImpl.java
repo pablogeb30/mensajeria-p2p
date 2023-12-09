@@ -37,31 +37,7 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         return clientMap;
     }
 
-    // Metodo ejecutado por el servidor para inicializar el mapa de clientes
-    public void setFriends(HashMap<String, CallbackClientInterface> clientMap) throws RemoteException {
-        for (CallbackClientInterface client : clientMap.values()) {
-            this.clientMap.put(client.getUsername(), client);
-            // Actualizamos la interfaz grafica anhadiendo los clientes
-            gui.addClient(client.getUsername());
-        }
-    }
-
-    // Metodo ejecutado por el servidor para actualizar el mapa de clientes
-    public void updateFriends(CallbackClientInterface cObject) throws RemoteException {
-        if (!(clientMap.containsKey(cObject.getUsername())) && !(cObject.getUsername().equals(this.getUsername()))) {
-            clientMap.put(cObject.getUsername(), cObject);
-            System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
-            // Actualizamos la interfaz grafica anhadiendo los clientes
-            gui.addClient(cObject.getUsername());
-        } else {
-            if (!cObject.getUsername().equals(this.getUsername())) {
-                clientMap.remove(cObject.getUsername());
-                System.out.println("Usuario desconectado: " + cObject.getUsername());
-                // Actualizamos la interfaz grafica eliminando los clientes
-                gui.removeClient(cObject.getUsername());
-            }
-        }
-    }
+    
 
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
     public void sendMessage(String message) throws RemoteException {
