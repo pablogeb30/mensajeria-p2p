@@ -47,6 +47,9 @@ public class CallbackClient {
             String registryURL = "rmi://" + args[0] + ":1099/callback";
             CallbackServerInterface server = (CallbackServerInterface) Naming.lookup(registryURL);
 
+            // Iniciamos la interfaz de login
+            new LoginUI(server, false);
+
             Scanner scanner = new Scanner(System.in);
             System.out.println("¿Eres un usuario nuevo? (sí/no)");
             String respuesta = scanner.nextLine().trim().toLowerCase();
@@ -164,9 +167,6 @@ public class CallbackClient {
                     break;
                 }
             }
-
-            // Iniciamos la interfaz de login
-            new LoginUI(server, false);
 
             server.cerrarSesion(username);
             scanner.close();
