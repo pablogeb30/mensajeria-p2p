@@ -20,10 +20,10 @@ public interface CallbackClientInterface extends Remote {
     // Metodo ejecutado por el servidor para actualizar el mapa de clientes
     public void updateFriends(CallbackClientInterface cObject) throws RemoteException;
 
-    // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
-    public void sendMessage(String message) throws RemoteException;
+    // Metodo ejecutado por un cliente para mandar un mensaje a otro cliente
+    public void sendMessage(String username, String message) throws RemoteException;
 
-    // Metodo ejecutado por un cliente para notificar a otro
+    // Metodo ejecutado por un cliente para notificar al otro
     public void notifyMe(String username, String message) throws RemoteException;
 
 }

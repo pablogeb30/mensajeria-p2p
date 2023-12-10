@@ -84,13 +84,6 @@ public class LoginUI extends JFrame {
         panel1.addMouseListener(ma);
         panel1.addMouseMotionListener(ma);
 
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                System.exit(0);
-            }
-        });
-
         return panel1;
     }
 
