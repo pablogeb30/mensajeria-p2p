@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-//import java.util.HashMap;
 import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 import agpg.client.CallbackClientInterface;
@@ -25,12 +24,21 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
     // Gestor de conexiones a la base de datos
     private static HikariDataSource dataSource;
 
-    // Estado del usuario
-    private static final String conectado = "online";
-    private static final String desconectado = "offline";
+    // Estado del usuario usando un enumerado:
+    private enum EstadoUsuario {
+        online, offline
+    }
 
+
+    // Cargar la configuración del servidor desde el archivo y configurar la BD
     static {
         try {
+            // Comprobar si el archivo de configuración existe
+            if (!new java.io.File("server_config.properties").exists()) {
+                System.err.println("No se ha encontrado el archivo de configuración del servidor.");
+                System.exit(1);
+            }
+
             properties.load(new FileInputStream("server_config.properties"));
             configureDatabase();
 
@@ -42,49 +50,39 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
     private static void configureDatabase() {
 
-        String jdbcUrl = properties.getProperty("db.jdbcUrl");
-        String username = properties.getProperty("db.username");
-        String password = properties.getProperty("db.password");
-        int maxPoolSize = Integer.parseInt(properties.getProperty("db.maxPoolSize", "5"));
+        try {
+            // Comprobar si se han especificado las propiedades de la base de datos
+            if (!properties.containsKey("db.jdbcUrl") || !properties.containsKey("db.username")
+                    || !properties.containsKey("db.password") || !properties.containsKey("db.maxPoolSize")) {
+                System.err.println("No se han especificado las propiedades necesarias de la base de datos.");
+                System.exit(1);
+            }
 
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrl);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setMaximumPoolSize(maxPoolSize);
+            String jdbcUrl = properties.getProperty("db.jdbcUrl");
+            String username = properties.getProperty("db.username");
+            String password = properties.getProperty("db.password");
+            int maxPoolSize = Integer.parseInt(properties.getProperty("db.maxPoolSize"));
 
-        dataSource = new HikariDataSource(config);
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(jdbcUrl);
+            config.setUsername(username);
+            config.setPassword(password);
+            config.setMaximumPoolSize(maxPoolSize);
+
+            dataSource = new HikariDataSource(config);
+
+        } catch (Exception e) {
+            System.err.println("Error al configurar la base de datos: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
-
-    //private HashMap<String, CallbackClientInterface> clientMap;
 
     public CallbackServerImpl() throws RemoteException {
         super();
-        //clientMap = new HashMap<>();
     }
 
-    
-    /*
-    private synchronized void registerCallback(CallbackClientInterface cObject) throws RemoteException {
-        if (!clientMap.containsKey(cObject.getUsername())) {
-            clientMap.put(cObject.getUsername(), cObject);
-            System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
-        } else {
-            System.out.println("Usuario ya conectado: " + cObject.getUsername());
-        }
-    }
 
-    
-    private synchronized void unregisterCallback(CallbackClientInterface cObject) throws RemoteException {
-        if (clientMap.containsKey(cObject.getUsername())) {
-            clientMap.remove(cObject.getUsername());
-            System.out.println("Usuario desconectado: " + cObject.getUsername());
-        }
-    }
-
-    */
-    
-
+    // Método para registrar un usuario en el servidor
     public boolean iniciarSesion(String username, String password, CallbackClientInterface cObject)
             throws RemoteException {
         try (Connection conn = dataSource.getConnection()) {
@@ -98,12 +96,12 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         String hashedPassword = rs.getString("Password");
+
                         if (BCrypt.checkpw(password, hashedPassword)) {
-                            //registerCallback(cObject);
 
                             String sql2 = "UPDATE Usuarios SET Estado = ? WHERE Username = ?;";
                             try (PreparedStatement pstmt2 = conn.prepareStatement(sql2)) {
-                                pstmt2.setString(1, conectado);
+                                pstmt2.setString(1, EstadoUsuario.online.toString());
                                 pstmt2.setString(2, username);
                                 pstmt2.executeUpdate();
                             }
@@ -124,24 +122,20 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             throws RemoteException {
         try (Connection conn = dataSource.getConnection()) {
             if (usuarioYaExiste(username, conn)) {
-                cObject.notifyEvent("El nombre de usuario ya está en uso.");
                 return false; // Usuario ya existe
-            }        
+            }
 
             String sql = "INSERT INTO Usuarios (Username, Password, Email, Estado) VALUES (?, ?, ?, ?);";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, username);
                 pstmt.setString(2, hashPassword(password));
                 pstmt.setString(3, correo);
-                pstmt.setString(4, conectado);
+                pstmt.setString(4, EstadoUsuario.online.toString());
                 pstmt.executeUpdate();
-
-                //registerCallback(cObject);
 
                 return true; // Usuario registrado con éxito
             }
         } catch (SQLException e) {
-            cObject.notifyEvent("Ha ocurrido un error durante el registro, intentelo de nuevo mas tarde.");
             System.err.println("Error al registrar el cliente: " + e.getMessage());
             throw new RemoteException("Error al registrar el cliente", e);
         }
@@ -202,11 +196,11 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         try (Connection conn = dataSource.getConnection()) {
             String sql = "UPDATE Usuarios SET Estado = ? WHERE Username = ?;";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, desconectado);
+                pstmt.setString(1, EstadoUsuario.offline.toString());
                 pstmt.setString(2, username);
                 pstmt.executeUpdate();
 
-                //unregisterCallback(clientMap.get(username));
+                // unregisterCallback(clientMap.get(username));
             }
         } catch (SQLException e) {
             System.err.println("Error al cerrar sesión: " + e.getMessage());
@@ -216,58 +210,74 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
     // Método para enviar solicitud de amistad
     public void enviarSolicitudAmistad(String userName, String friendName) throws RemoteException {
-
-        // Comprobar que el usuario no se esté enviando una solicitud de amistad a sí mismo
-        if (userName.equals(friendName)) {
-            System.out.println("No puedes enviarte una solicitud de amistad a ti mismo.");
-            return;
-        }
-
-
-        // Comprobar que el usuario no esté enviando una solicitud de amistad a un amigo
-        List<String> amigos = obtenerAmigos(userName);
-        if (amigos.contains(friendName)) {
-            System.out.println("Este usuario y tu ya sois amigos.");
-            return;
-        }
-
-        // Comprobar que el usuario no esté enviando una solicitud de amistad a un usuario al que ya le ha enviado una solicitud
-        List<String> solicitudesAmistad = obtenerSolicitudesAmistad(userName);
-
-        if (solicitudesAmistad.contains(friendName)) {
-            System.out.println("Ya has enviado una solicitud de amistad a este usuario.");
-            return;
-        }
-
-        // Comprobar que el usuario al que se le envia la solicitud existe
-        try{
-            if (!usuarioYaExiste(friendName, dataSource.getConnection())) {
-                System.out.println("El usuario al que intentas enviar la solicitud no existe.");
-                return;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al comprobar si el usuario existe: " + e.getMessage());
-            throw new RemoteException("Error al comprobar si el usuario existe", e);
-        }
-
-
-
-
-        // Obtener el ID del usuario actual
+        validarSolicitudAmistad(userName, friendName);
         int userID = obtenerUserID(userName);
+        int friendID = obtenerUserID(friendName);
+        insertarSolicitudAmistad(userID, friendID);
+    }
 
-        // Obtener el ID del amigo
+    private void validarSolicitudAmistad(String userName, String friendName) throws RemoteException {
+        if (userName.equals(friendName)) {
+            throw new RemoteException("No puedes enviarte una solicitud de amistad a ti mismo.");
+        }
+
+        if (sonAmigos(userName, friendName) || solicitudYaEnviada(userName, friendName)) {
+            throw new RemoteException("Solicitud de amistad no válida.");
+        }
+    }
+
+    private boolean sonAmigos(String userName, String friendName) throws RemoteException {
+        int userID = obtenerUserID(userName);
         int friendID = obtenerUserID(friendName);
 
-        // Insertar la solicitud de amistad en la base de datos
+        String sql = "SELECT COUNT(*) FROM Amigos WHERE (UserID1 = ? AND UserID2 = ?) OR (UserID1 = ? AND UserID2 = ?) AND EstadoAmistad = 'aceptada';";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userID);
+            pstmt.setInt(2, friendID);
+            pstmt.setInt(3, friendID);
+            pstmt.setInt(4, userID);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RemoteException("Error al comprobar si los usuarios son amigos", e);
+        }
+        return false;
+    }
+
+    private boolean solicitudYaEnviada(String userName, String friendName) throws RemoteException {
+        int userID = obtenerUserID(userName);
+        int friendID = obtenerUserID(friendName);
+
+        String sql = "SELECT COUNT(*) FROM Amigos WHERE (UserID1 = ? AND UserID2 = ?) OR (UserID1 = ? AND UserID2 = ?) AND EstadoAmistad = 'pendiente';";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userID);
+            pstmt.setInt(2, friendID);
+            pstmt.setInt(3, friendID);
+            pstmt.setInt(4, userID);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RemoteException("Error al comprobar si la solicitud de amistad ya ha sido enviada", e);
+        }
+        return false;
+    }
+
+    private void insertarSolicitudAmistad(int userID, int friendID) throws RemoteException {
         String sql = "INSERT INTO Amigos (UserID1, UserID2, EstadoAmistad) VALUES (?, ?, 'pendiente');";
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userID);
             pstmt.setInt(2, friendID);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Error al enviar solicitud de amistad: " + e.getMessage());
-            throw new RemoteException("Error al enviar solicitud de amistad", e);
+            throw new RemoteException("Error al insertar la solicitud de amistad", e);
         }
     }
 
@@ -324,7 +334,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         int userID = obtenerUserID(username);
 
         List<String> usuariosRecomendados = new ArrayList<>();
-        String sql = "SELECT Username FROM Usuarios WHERE UserID NOT IN (SELECT UserID1 FROM Amigos WHERE UserID2 = ?) " +
+        String sql = "SELECT Username FROM Usuarios WHERE UserID NOT IN (SELECT UserID1 FROM Amigos WHERE UserID2 = ?) "
+                +
                 "AND UserID NOT IN (SELECT UserID2 FROM Amigos WHERE UserID1 = ?) " +
                 "AND UserID NOT IN (SELECT UserID1 FROM Amigos WHERE UserID2 = ? AND EstadoAmistad = 'pendiente') " +
                 "AND UserID NOT IN (SELECT UserID2 FROM Amigos WHERE UserID1 = ? AND EstadoAmistad = 'pendiente') " +
@@ -427,6 +438,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
         return amigos;
     }
+    
 
     // Metodo para comprobar si un usuario esta conectado
     public boolean estaConectado(String username) throws RemoteException {
@@ -437,15 +449,14 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         String estado = rs.getString("Estado");
-                        return estado.equals(conectado);
+                        return estado.equals(EstadoUsuario.online.toString());
                     }
                 }
             }
             return false;
         } catch (SQLException e) {
             System.err.println("Error al comprobar si el usuario está conectado: " + e.getMessage());
-            throw new RemoteException("Error al comprobar si el usuario está conectado", e);
-        }
+            throw new RemoteException("Error al comprobar si el usuario está conectado", e);        }
     }
 
 }
