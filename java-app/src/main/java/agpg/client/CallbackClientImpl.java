@@ -5,6 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import agpg.GUI.chat.ChatUI;
+import agpg.GUI.chat.Message;
 
 // Implementacion de la interfaz del cliente
 public class CallbackClientImpl extends UnicastRemoteObject implements CallbackClientInterface {
@@ -68,10 +69,10 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         clientMap.get(username).notifyMe(this.getUsername(), message);
     }
 
-    // Metodo ejecutado por un cliente para notificar al otro
+    // Metodo ejecutado por el cliente al que mandan el mensaje
     public void notifyMe(String username, String message) throws RemoteException {
         // Simplemente actualizamos la interfaz grafica mostrando el mensaje
-        gui.updateChat(username, message, false);
+        gui.updateOtherChat(username, new Message(message, username, this.getUsername()));
     }
 
 }

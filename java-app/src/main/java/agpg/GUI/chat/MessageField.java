@@ -33,7 +33,7 @@ public class MessageField extends JTextField {
                         cObj.sendMessage(selectedClient, message);
                         setText("");
                         // Actualizamos el chat propio
-                        gui.updateChat(selectedClient, message, true);
+                        gui.updateMyChat(selectedClient, new Message(message, cObj.getUsername(), selectedClient));
                     } catch (RemoteException e) {
                         System.out.println("Excepcion al mandar el mensaje: " + e.getMessage());
                     }

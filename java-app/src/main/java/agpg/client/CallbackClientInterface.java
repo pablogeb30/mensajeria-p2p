@@ -23,7 +23,7 @@ public interface CallbackClientInterface extends Remote {
     // Metodo ejecutado por un cliente para mandar un mensaje a otro cliente
     public void sendMessage(String username, String message) throws RemoteException;
 
-    // Metodo ejecutado por un cliente para notificar al otro
+    // Metodo ejecutado por el cliente al que mandan el mensaje
     public void notifyMe(String username, String message) throws RemoteException;
 
 }

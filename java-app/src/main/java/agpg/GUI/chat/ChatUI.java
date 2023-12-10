@@ -68,7 +68,7 @@ public class ChatUI extends JFrame {
                         clientObject.sendMessage(selectedClient, message);
                         messageField.setText("");
                         // Actualizamos el chat propio
-                        updateChat(selectedClient, message, true);
+                        updateMyChat(selectedClient, new Message(message, clientObject.getUsername(), selectedClient));
                     } catch (RemoteException ex) {
                         System.out.println("Excepcion al mandar el mensaje: " + ex.getMessage());
                     }
@@ -88,6 +88,7 @@ public class ChatUI extends JFrame {
         chatPane.setDocument(doc);
         chatPane.setFont(new Font("Arial", Font.PLAIN, 18));
         chatPane.setFocusable(false);
+        chatPane.setEditable(false);
 
         // Anhadimos el area de chat y el campo de mensaje al panel de chat
         chatPanel.add(new JScrollPane(chatPane), BorderLayout.CENTER);
@@ -134,47 +135,6 @@ public class ChatUI extends JFrame {
         return clientList.getSelectedValue();
     }
 
-    // Metodo para actualizar el area de chat (cambiar orden del texto)
-    public void updateChat(String username, String message, boolean flag) {
-        try {
-            StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_LEFT);
-            doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
-            if (username.equals(clientObject.getUsername())) {
-                doc.insertString(doc.getLength(), username + ": " + message + "\n", null);
-                if (flag) {
-                    if (!messagesMap.containsKey(username)) {
-                        messagesMap.put(username, new ArrayList<>());
-                    }
-                    messagesMap.get(username).add(new Message(message, clientObject.getUsername(), username));
-                    for (Message m : messagesMap.get(username)) {
-                        System.out.println(m.getSender() + " -> " + m.getReceiver() + " " + m.getDate());
-                        System.out.println(m.getMessage());
-                    }
-                }
-                return;
-            }
-            if (!messagesMap.containsKey(username)) {
-                messagesMap.put(username, new ArrayList<>());
-            }
-            messagesMap.get(username).add(new Message(message, clientObject.getUsername(), username));
-            for (Message m : messagesMap.get(username)) {
-                System.out.println(m.getSender() + " -> " + m.getReceiver() + " " + m.getDate());
-                System.out.println(m.getMessage());
-            }
-            if (username.equals(clientList.getSelectedValue())) {
-                if (flag) {
-                    StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
-                    doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
-                    doc.insertString(doc.getLength(), clientObject.getUsername() + ": " + message + "\n", null);
-                    return;
-                }
-                doc.insertString(doc.getLength(), username + ": " + message + "\n", null);
-            }
-        } catch (RemoteException | BadLocationException e) {
-            System.out.println("Excepcion al actualizar el area de chat: " + e.getMessage());
-        }
-    }
-
     // Metodo para definir el chat actual
     public void setChat(String username) {
         if (messagesMap.containsKey(username)) {
@@ -182,12 +142,12 @@ public class ChatUI extends JFrame {
             for (Message message : messages) {
                 try {
                     if (message.getSender().equals(username)) {
-                        StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
+                        StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_LEFT);
                         doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
                         doc.insertString(doc.getLength(),
                                 message.getSender() + ": " + message.getMessage() + "\n", null);
                     } else {
-                        StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_LEFT);
+                        StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
                         doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
                         doc.insertString(doc.getLength(), message.getSender() + ": " + message.getMessage() + "\n",
                                 null);
@@ -197,6 +157,39 @@ public class ChatUI extends JFrame {
                 }
             }
         }
+    }
+
+    public void updateMyChat(String receiver, Message message) {
+        try {
+            if (!messagesMap.containsKey(receiver)) {
+                messagesMap.put(receiver, new ArrayList<>());
+            }
+            messagesMap.get(receiver).add(message);
+            System.out.println(message.getSender() + " -> " + message.getReceiver() + " " + message.getDate());
+            System.out.println(message.getMessage());
+            StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
+            doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
+            doc.insertString(doc.getLength(), clientObject.getUsername() + ": " + message.getMessage() + "\n", null);
+        } catch (RemoteException | BadLocationException e) {
+            System.out.println("Excepcion al actualizar el area de chat: " + e.getMessage());
+        }
+    }
+
+    public void updateOtherChat(String sender, Message message) {
+        try {
+            if (!messagesMap.containsKey(sender)) {
+                messagesMap.put(sender, new ArrayList<>());
+            }
+            messagesMap.get(sender).add(message);
+            System.out.println(message.getSender() + " -> " + message.getReceiver() + " " + message.getDate());
+            System.out.println(message.getMessage());
+            StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_LEFT);
+            doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
+            doc.insertString(doc.getLength(), sender + ": " + message.getMessage() + "\n", null);
+        } catch (BadLocationException e) {
+            System.out.println("Excepcion al actualizar el area de chat: " + e.getMessage());
+        }
+
     }
 
 }

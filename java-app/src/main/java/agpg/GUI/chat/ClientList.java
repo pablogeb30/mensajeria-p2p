@@ -50,22 +50,20 @@ public class ClientList extends JList<String> {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     if (getSelectedValue() != null) {
-                        // Terminar esto
                         String selectedClient = getSelectedValue();
-                        gui.setChat(selectedClient);
-                        messageField.setVisible(true);
-                        sendButton.setVisible(true);
-                        chatPanel.remove(label1);
-                        chatPanel.revalidate();
-                        chatPanel.repaint();
+                        if (selectedClient != null) {
+                            gui.setChat(selectedClient);
+                            messageField.setVisible(true);
+                            sendButton.setVisible(true);
+                            chatPanel.revalidate();
+                        }
                     } else {
                         chatPane.setText("");
+                        chatPane.setEditable(false);
                         messageField.setText(" Escribe un mensaje");
                         messageField.setVisible(false);
                         sendButton.setVisible(false);
-                        chatPanel.add(label1);
                         chatPanel.revalidate();
-                        chatPanel.repaint();
                     }
                 }
             }
