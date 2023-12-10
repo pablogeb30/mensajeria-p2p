@@ -23,7 +23,6 @@ public class CallbackClient {
             System.setProperty("javax.net.ssl.trustStore", "truststoreCodis.jks");
             System.setProperty("javax.net.ssl.trustStorePassword", "Codis2023");
 
-
             SSLContext sslContext = SSLContext.getInstance("TLS");
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -48,8 +47,11 @@ public class CallbackClient {
             String registryURL = "rmi://" + args[0] + ":1099/callback";
             CallbackServerInterface server = (CallbackServerInterface) Naming.lookup(registryURL);
 
-            // Iniciamos la interfaz de login
-            new LoginUI(server, false);
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("¿Eres un usuario nuevo? (sí/no)");
+            String respuesta = scanner.nextLine().trim().toLowerCase();
+            String username;
+            boolean registrado = false;
 
             if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                 // Registro de nuevo usuario
@@ -61,7 +63,7 @@ public class CallbackClient {
                 System.out.println("Introduce tu correo electrónico:");
                 String correo = scanner.nextLine();
 
-                registrado = server.registrarCliente(username, password, correo, new CallbackClientImpl(username));
+                registrado = server.registrarCliente(username, password, correo);
             } else {
                 // Inicio de sesión
                 System.out.println("Iniciar sesión.");
@@ -70,14 +72,13 @@ public class CallbackClient {
                 System.out.println("Introduce tu contraseña:");
                 String password = scanner.nextLine();
 
-                registrado = server.iniciarSesion(username, password, new CallbackClientImpl(username));
+                registrado = server.iniciarSesion(username, password);
             }
 
             if (!registrado) {
                 System.out.println("No se pudo registrar o iniciar sesión.");
                 System.exit(1);
             }
-           
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
@@ -117,7 +118,8 @@ public class CallbackClient {
 
                         if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                             // Mandar solicitud de amistad
-                            System.out.println("Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
+                            System.out.println(
+                                    "Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
                             String friendName = scanner.nextLine();
                             server.enviarSolicitudAmistad(username, friendName);
                         }
@@ -135,7 +137,8 @@ public class CallbackClient {
 
                         if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                             // Aceptar solicitud de amistad
-                            System.out.println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
+                            System.out
+                                    .println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
                             String friendName = scanner.nextLine();
                             server.aceptarSolicitudAmistad(username, friendName);
                         }
@@ -146,7 +149,8 @@ public class CallbackClient {
 
                         if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                             // Rechazar solicitud de amistad
-                            System.out.println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
+                            System.out
+                                    .println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
                             String friendName = scanner.nextLine();
                             server.rechazarSolicitudAmistad(username, friendName);
                         }
@@ -160,6 +164,9 @@ public class CallbackClient {
                     break;
                 }
             }
+
+            // Iniciamos la interfaz de login
+            new LoginUI(server, false);
 
             server.cerrarSesion(username);
             scanner.close();

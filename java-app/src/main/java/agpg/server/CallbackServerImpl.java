@@ -15,6 +15,7 @@ import java.rmi.RemoteException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.HashMap;
 
 public class CallbackServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
@@ -29,6 +30,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         online, offline
     }
 
+    // Mapa de clientes registrados
+    private HashMap<String, CallbackClientInterface> clientMap;
 
     // Cargar la configuración del servidor desde el archivo y configurar la BD
     static {
@@ -79,11 +82,44 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
     public CallbackServerImpl() throws RemoteException {
         super();
+        this.clientMap = new HashMap<>();
     }
 
+    // Metodo que registra a un cliente para que reciba callbacks
+    public synchronized void registerCallback(CallbackClientInterface cObject) throws RemoteException {
+        if (!(clientMap.containsKey(cObject.getUsername()))) {
+            // En vez de anhadir al mapa, revisar base de datos (consulta SQL)
+            cObject.setFriends(clientMap);
+            clientMap.put(cObject.getUsername(), cObject);
+            updateClientsCallback(cObject);
+            System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
+        } else {
+            System.out.println("Usuario ya conectado: " + cObject.getUsername());
+        }
+    }
+
+    // Metodo que cancela el registro de un cliente para que no reciba callbacks
+    public synchronized void unregisterCallback(CallbackClientInterface cObject) throws RemoteException {
+        if (clientMap.containsKey(cObject.getUsername())) {
+            clientMap.remove(cObject.getUsername());
+            updateClientsCallback(cObject);
+            System.out.println("Usuario desconectado: " + cObject.getUsername());
+        }
+    }
+
+    // Metodo que llama al metodo remoto del cliente para actualizar los amigos
+    private void updateClientsCallback(CallbackClientInterface cObject) {
+        try {
+            for (CallbackClientInterface client : clientMap.values()) {
+                client.updateFriends(cObject);
+            }
+        } catch (RemoteException e) {
+            System.out.println("Excepcion en updateClientsCallback: " + e);
+        }
+    }
 
     // Método para registrar un usuario en el servidor
-    public boolean iniciarSesion(String username, String password, CallbackClientInterface cObject)
+    public boolean iniciarSesion(String username, String password)
             throws RemoteException {
         try (Connection conn = dataSource.getConnection()) {
             if (!usuarioYaExiste(username, conn)) {
@@ -118,7 +154,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-    public boolean registrarCliente(String username, String password, String correo, CallbackClientInterface cObject)
+    public boolean registrarCliente(String username, String password, String correo)
             throws RemoteException {
         try (Connection conn = dataSource.getConnection()) {
             if (usuarioYaExiste(username, conn)) {
@@ -439,7 +475,6 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
         return amigos;
     }
-    
 
     // Metodo para comprobar si un usuario esta conectado
     public boolean estaConectado(String username) throws RemoteException {
@@ -457,7 +492,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             return false;
         } catch (SQLException e) {
             System.err.println("Error al comprobar si el usuario está conectado: " + e.getMessage());
-            throw new RemoteException("Error al comprobar si el usuario está conectado", e);        }
+            throw new RemoteException("Error al comprobar si el usuario está conectado", e);
+        }
     }
 
 }

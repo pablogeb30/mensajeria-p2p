@@ -205,13 +205,24 @@ public class LoginUI extends JFrame {
             @Override
             public void keyTyped(KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    String username = null;
+                    String password = null;
+                    String mail = null;
                     for (Component c : panel1.getComponents()) {
                         if ("usernameField".equals(c.getName())) {
-                            loginEventHandler(((TextFieldUsername) c).getText(),
-                                    new String(passwordField.getPassword()));
-                            break;
+                            username = ((TextFieldUsername) c).getText();
+                            continue;
+                        }
+                        if ("passwordField".equals(c.getName())) {
+                            password = new String(passwordField.getPassword());
+                            continue;
+                        }
+                        if ("mailField".equals(c.getName())) {
+                            mail = ((TextFieldUsername) c).getText();
+                            continue;
                         }
                     }
+                    loginEventHandler(username, password, mail);
                 }
             }
         });
@@ -258,6 +269,7 @@ public class LoginUI extends JFrame {
             public void mousePressed(MouseEvent e) {
                 String username = null;
                 String password = null;
+                String mail = null;
                 for (Component c : panel1.getComponents()) {
                     if ("usernameField".equals(c.getName())) {
                         username = ((TextFieldUsername) c).getText();
@@ -267,8 +279,12 @@ public class LoginUI extends JFrame {
                         password = new String(((TextFieldPassword) c).getPassword());
                         continue;
                     }
+                    if ("mailField".equals(c.getName())) {
+                        mail = ((TextFieldUsername) c).getText();
+                        continue;
+                    }
                 }
-                loginEventHandler(username, password);
+                loginEventHandler(username, password, mail);
             }
 
             @Override
@@ -307,7 +323,7 @@ public class LoginUI extends JFrame {
         }
     }
 
-    private void loginEventHandler(String username, String password) {
+    private void loginEventHandler(String username, String password, String mail) {
         try {
             if (!flag) {
                 boolean registrado = server.iniciarSesion(username, password);
@@ -327,7 +343,7 @@ public class LoginUI extends JFrame {
                 }));
             }
             if (flag) {
-                boolean registrado = server.registrarCliente(username, password);
+                boolean registrado = server.registrarCliente(username, password, mail);
                 if (!registrado) {
                     toaster.error("Usuario ya existente.");
                     return;

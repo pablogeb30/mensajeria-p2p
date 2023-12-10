@@ -3,6 +3,7 @@ package agpg.client;
 // Importamos las librerias necesarias (RMI y HashMap)
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 
 // Interfaz del cliente
 public interface CallbackClientInterface extends Remote {

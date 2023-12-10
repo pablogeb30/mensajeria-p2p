@@ -5,7 +5,6 @@ import java.rmi.Naming;
 import java.util.Scanner;
 import java.rmi.RemoteException;
 
-
 public class ClienteNOtls {
 
     public static void main(String args[]) {
@@ -36,7 +35,7 @@ public class ClienteNOtls {
                 System.out.println("Introduce tu correo electrónico:");
                 String correo = scanner.nextLine();
 
-                registrado = server.registrarCliente(username, password, correo, new CallbackClientImpl(username));
+                registrado = server.registrarCliente(username, password, correo);
             } else {
                 // Inicio de sesión
                 System.out.println("Iniciar sesión.");
@@ -45,14 +44,13 @@ public class ClienteNOtls {
                 System.out.println("Introduce tu contraseña:");
                 String password = scanner.nextLine();
 
-                registrado = server.iniciarSesion(username, password, new CallbackClientImpl(username));
+                registrado = server.iniciarSesion(username, password);
             }
 
             if (!registrado) {
                 System.out.println("No se pudo registrar o iniciar sesión.");
                 System.exit(1);
             }
-           
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
@@ -92,7 +90,8 @@ public class ClienteNOtls {
 
                         if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                             // Mandar solicitud de amistad
-                            System.out.println("Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
+                            System.out.println(
+                                    "Introduce el nombre del usuario al que desea mandar la solicitud de amistad:");
                             String friendName = scanner.nextLine();
                             server.enviarSolicitudAmistad(username, friendName);
                         }
@@ -110,7 +109,8 @@ public class ClienteNOtls {
 
                         if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                             // Aceptar solicitud de amistad
-                            System.out.println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
+                            System.out
+                                    .println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
                             String friendName = scanner.nextLine();
                             server.aceptarSolicitudAmistad(username, friendName);
                         }
@@ -121,7 +121,8 @@ public class ClienteNOtls {
 
                         if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                             // Rechazar solicitud de amistad
-                            System.out.println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
+                            System.out
+                                    .println("Introduce el nombre del usuario que ha enviado la solicitud de amistad:");
                             String friendName = scanner.nextLine();
                             server.rechazarSolicitudAmistad(username, friendName);
                         }
