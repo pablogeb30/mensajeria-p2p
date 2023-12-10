@@ -38,7 +38,6 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
     }
 
     
-
     // Metodo ejecutado por un cliente para enviar un mensaje a otro cliente
     public void sendMessage(String message) throws RemoteException {
         // Obtenemos el cliente seleccionado
@@ -56,6 +55,12 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
     public void notifyMe(String username, String message) throws RemoteException {
         // Actualizamos la interfaz grafica mostrando el mensaje
         gui.updateChat(username, message);
+    }
+
+    // Metodo para recibir avisos del servidor
+    public void notifyEvent(String message) throws RemoteException {
+        // Actualizamos la interfaz grafica mostrando el mensaje
+        System.out.println(message);
     }
 
 }
