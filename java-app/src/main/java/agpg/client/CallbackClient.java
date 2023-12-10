@@ -1,5 +1,7 @@
 package agpg.client;
 
+// Importamos las librerias necesarias (GUI, CallbackServerInterface y RMI)
+import agpg.GUI.login.LoginUI;
 import agpg.server.CallbackServerInterface;
 import java.rmi.Naming;
 import java.util.Scanner;
@@ -11,8 +13,10 @@ import java.security.KeyStore;
 import java.io.FileInputStream;
 import java.security.SecureRandom;
 
+// Clase principal del cliente
 public class CallbackClient {
 
+    // Metodo principal
     public static void main(String args[]) {
         try {
             // Configuración SSL
@@ -39,15 +43,13 @@ public class CallbackClient {
                 System.out.println("Uso: java CallbackClient <serverHost>");
                 System.exit(1);
             }
-            String serverHost = args[0];
-            String registryURL = "rmi://" + serverHost + ":1099/callback";
-            CallbackServerInterface server = (CallbackServerInterface) Naming.lookup(registryURL);
-            Scanner scanner = new Scanner(System.in);
 
-            System.out.println("¿Eres un usuario nuevo? (sí/no)");
-            String respuesta = scanner.nextLine().trim().toLowerCase();
-            String username;
-            boolean registrado = false;
+            // Obtenemos la referencia al objeto remoto del servidor
+            String registryURL = "rmi://" + args[0] + ":1099/callback";
+            CallbackServerInterface server = (CallbackServerInterface) Naming.lookup(registryURL);
+
+            // Iniciamos la interfaz de login
+            new LoginUI(server, false);
 
             if ("sí".equals(respuesta) || "si".equals(respuesta)) {
                 // Registro de nuevo usuario

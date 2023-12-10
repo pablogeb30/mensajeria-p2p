@@ -1,10 +1,10 @@
 package agpg.server;
 
-// Importamos los paquetes y librerias necesarias
+// Importamos las librerias necesarias (RMI y CallbackClientInterface)
 import java.rmi.Remote;
-import agpg.client.CallbackClientInterface;
 import java.rmi.RemoteException;
 import java.util.List;
+import agpg.client.CallbackClientInterface;
 
 // Interfaz del servidor
 public interface CallbackServerInterface extends Remote {
@@ -20,6 +20,8 @@ public interface CallbackServerInterface extends Remote {
     
     // Metodo para cerrar sesion
     public void cerrarSesion(String username) throws RemoteException;
+    // Metodo que registra a un cliente para que reciba callbacks
+    public void registerCallback(CallbackClientInterface cObject) throws RemoteException;
 
     // Metodo para obtener una lista de usuarios recomendados
     public List<String> obtenerUsuariosRecomendados(String username) throws RemoteException;
@@ -29,6 +31,7 @@ public interface CallbackServerInterface extends Remote {
 
     // Metodo para aceptar una solicitud de amistad
     public void aceptarSolicitudAmistad(String userName, String friendName) throws RemoteException;
+    // Metodo para registrar un nuevo cliente
 
     // Metodo para rechazar una solicitud de amistad
     public void rechazarSolicitudAmistad(String userName, String friendName) throws RemoteException;

@@ -111,7 +111,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                     }
                 }
             }
-            return false; // Contraseña incorrecta
+            return false; // Contrasenha incorrecta
         } catch (SQLException e) {
             System.err.println("Error al iniciar sesión: " + e.getMessage());
             throw new RemoteException("Error al iniciar sesión", e);
@@ -141,6 +141,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
+    // Metodo auxiliar para verificar si un usuario ya existe
     private boolean usuarioYaExiste(String username, Connection conn) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Usuarios WHERE Username = ?;";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -154,7 +155,7 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         return false;
     }
 
-    // Método auxiliar para cifrar o hashear la contraseña
+    // Metodo auxiliar para cifrar o hashear la contrasenha
     private String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
     }
