@@ -108,7 +108,7 @@ public class CallbackServer {
                 System.setProperty("javax.net.ssl.keyStorePassword", new String(password));
 
                 // Debug SSL
-                // System.setProperty("javax.net.debug", "ssl,handshake");
+                System.setProperty("javax.net.debug", "ssl,handshake");
 
                 SSLContext sslContext = SSLContext.getInstance("TLS");
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -118,6 +118,9 @@ public class CallbackServer {
                 kmf.init(ks, password);
 
                 sslContext.init(kmf.getKeyManagers(), null, new SecureRandom());
+
+                //Aceptamos conexiones
+                SSLContext.setDefault(sslContext);
 
             } finally {
 

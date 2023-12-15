@@ -10,12 +10,10 @@ import agpg.client.CallbackClientInterface;
 public interface CallbackServerInterface extends Remote {
 
         // Metodo para iniciar sesion
-        public boolean iniciarSesion(String username, String password)
-                        throws RemoteException;
+        public boolean iniciarSesion(String username, String password) throws RemoteException;
 
         // Metodo para registrar un nuevo cliente
-        public boolean registrarCliente(String username, String password, String correo)
-                        throws RemoteException;
+        public boolean registrarCliente(String username, String password, String correo) throws RemoteException;
 
         // Metodo para cambiar la contraseña
         public boolean cambiarPassword(String username, String password, String newPassword) throws RemoteException;

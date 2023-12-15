@@ -38,14 +38,6 @@
             "request": "launch",
             "mainClass": "agpg.server.CallbackServer",
             "projectName": "java-app"
-        },
-        {
-            "type": "java",
-            "name": "ClienteNOtls",
-            "request": "launch",
-            "mainClass": "agpg.client.ClienteNOtls",
-            "projectName": "java-app",
-            "args": "localhost"
         }
     ]
 }
