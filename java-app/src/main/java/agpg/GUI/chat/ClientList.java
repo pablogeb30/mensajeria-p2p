@@ -4,8 +4,9 @@ package agpg.GUI.chat;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import agpg.client.IClient;
 import agpg.GUI.login.Utils.UIUtils;
+import agpg.client.CallbackClientInterface;
+
 import java.awt.Font;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 public class ClientList extends JList<String> {
 
     // Constructor de la clase
-    public ClientList(ListModel<String> model, IClient cObj, MessageField messageField,
+    public ClientList(ListModel<String> model, CallbackClientInterface cObj, MessageField messageField,
             JButton sendButton,
             ChatUI gui, JPanel chatPanel, HashMap<String, ArrayList<Message>> messagesMap, JTextPane chatPane) {
 

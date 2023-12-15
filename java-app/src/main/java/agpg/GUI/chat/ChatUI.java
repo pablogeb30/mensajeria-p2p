@@ -1,7 +1,6 @@
 package agpg.GUI.chat;
 
 // Importamos las librerias necesarias (CallbackClientImpl, Swing, awt, util, RMI y GUI)
-import agpg.client.IClient;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
@@ -13,6 +12,7 @@ import java.rmi.RemoteException;
 
 import agpg.GUI.login.Utils.HyperlinkText;
 import agpg.GUI.login.Utils.UIUtils;
+import agpg.client.CallbackClientInterface;
 
 // Clase principal de GUI del clientes
 public class ChatUI extends JFrame {
@@ -40,10 +40,10 @@ public class ChatUI extends JFrame {
     private HashMap<String, ArrayList<Message>> messagesMap;
 
     // Cliente actual
-    private IClient clientObject;
+    private CallbackClientInterface clientObject;
 
     // Constructor de la clase
-    public ChatUI(IClient clientObject) {
+    public ChatUI(CallbackClientInterface clientObject) {
 
         this.clientObject = clientObject;
 
@@ -137,7 +137,7 @@ public class ChatUI extends JFrame {
 
     }
 
-    private JButton getSendButton(IClient clientObject) {
+    private JButton getSendButton(CallbackClientInterface clientObject) {
         // Boton de enviar mensaje
         JButton sendButton = new JButton("Enviar");
         sendButton.setFont(new Font("Arial", Font.PLAIN, 18));

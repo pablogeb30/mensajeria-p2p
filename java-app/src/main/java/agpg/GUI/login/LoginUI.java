@@ -2,9 +2,9 @@ package agpg.GUI.login;
 
 import agpg.GUI.login.Toaster.Toaster;
 import agpg.GUI.login.Utils.*;
-import agpg.client.ClientImpl;
-import agpg.client.IClient;
-import agpg.server.IServer;
+import agpg.client.CallbackClientImpl;
+import agpg.client.CallbackClientInterface;
+import agpg.server.CallbackServerInterface;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Objects;
@@ -14,10 +14,10 @@ import java.rmi.RemoteException;
 public class LoginUI extends JFrame {
 
     private final Toaster toaster;
-    private IServer server;
+    private CallbackServerInterface server;
     private boolean flag;
 
-    public LoginUI(IServer server) {
+    public LoginUI(CallbackServerInterface server) {
 
         this.server = server;
         flag = false;
@@ -340,7 +340,7 @@ public class LoginUI extends JFrame {
                     return;
                 }
                 this.dispose();
-                IClient callbackObj = new ClientImpl(username);
+                CallbackClientInterface callbackObj = new CallbackClientImpl(username);
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
@@ -357,7 +357,7 @@ public class LoginUI extends JFrame {
                     return;
                 }
                 this.dispose();
-                IClient callbackObj = new ClientImpl(username);
+                CallbackClientInterface callbackObj = new CallbackClientImpl(username);
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {

@@ -2,7 +2,9 @@ package agpg.GUI.chat;
 
 // Importamos las librerias necesarias (Swing, CallbackClientImpl, awt, RMI y util)
 import javax.swing.*;
-import agpg.client.IClient;
+
+import agpg.client.CallbackClientInterface;
+
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.event.*;
@@ -12,7 +14,7 @@ import java.rmi.RemoteException;
 public class MessageField extends JTextField {
 
     // Constructor de la clase
-    public MessageField(IClient cObj, ChatUI gui) {
+    public MessageField(CallbackClientInterface cObj, ChatUI gui) {
 
         // Definimos la fuente del campo de mensaje
         setFont(new Font("Arial", Font.PLAIN, 18));
