@@ -3,7 +3,10 @@ package agpg.client;
 // Importamos las librerias necesarias (RMI y HashMap)
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 // Interfaz del cliente
 public interface CallbackClientInterface extends Remote {
@@ -15,7 +18,7 @@ public interface CallbackClientInterface extends Remote {
     public HashMap<String, CallbackClientInterface> getClientMap() throws RemoteException;
 
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
-    public void setFriends(HashMap<String, CallbackClientInterface> clientMap) throws RemoteException;
+    public void setFriends(HashMap<String, CallbackClientInterface> clientMap, ConcurrentHashMap<String, PublicKey> mapaClaves) throws RemoteException;
 
     // Metodo ejecutado por el servidor para actualizar el mapa de clientes
     public void updateFriends(CallbackClientInterface cObject) throws RemoteException;
@@ -26,6 +29,8 @@ public interface CallbackClientInterface extends Remote {
     // Metodo ejecutado por el cliente al que mandan el mensaje
     public void notifyMe(String username, String message) throws RemoteException;
 
-    public void notifyEvent(String message) throws RemoteException;
+    //Clave
+    public PublicKey registroConServidor() throws Exception;
+
 
 }
