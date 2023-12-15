@@ -5,12 +5,13 @@ import java.util.HashMap;
 
 public class UIUtils {
     public static final Font FONT_GENERAL_UI = new Font("Segoe UI", Font.PLAIN, 20);
-    public static final Font FONT_FORGOT_PASSWORD = new Font("Segoe UI", Font.PLAIN, 12);
+    public static final Font FONT_FORGOT_PASSWORD = new Font("Segoe UI", Font.PLAIN, 14);
 
     public static final Color COLOR_OUTLINE = new Color(103, 112, 120);
     public static final Color COLOR_BACKGROUND = new Color(37, 51, 61);
     public static final Color COLOR_INTERACTIVE = new Color(108, 216, 158);
     public static final Color COLOR_INTERACTIVE_DARKER = new Color(87, 171, 127);
+    public static final Color COLOR_INTERACTIVE_LIGHTER = new Color(129, 255, 189);
     public static final Color OFFWHITE = new Color(229, 229, 229);
 
     public static final String BUTTON_TEXT_LOGIN = "Login";

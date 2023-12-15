@@ -2,9 +2,9 @@ package agpg.GUI.login;
 
 import agpg.GUI.login.Toaster.Toaster;
 import agpg.GUI.login.Utils.*;
-import agpg.client.CallbackClientImpl;
-import agpg.client.CallbackClientInterface;
-import agpg.server.CallbackServerInterface;
+import agpg.client.ClientImpl;
+import agpg.client.IClient;
+import agpg.server.IServer;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Objects;
@@ -14,31 +14,27 @@ import java.rmi.RemoteException;
 public class LoginUI extends JFrame {
 
     private final Toaster toaster;
-    private CallbackServerInterface server;
+    private IServer server;
     private boolean flag;
 
-    public LoginUI(CallbackServerInterface server, boolean f) {
+    public LoginUI(IServer server) {
 
         this.server = server;
-        flag = f;
+        flag = false;
 
         JPanel mainJPanel = getMainJPanel();
 
         addLogo(mainJPanel);
 
-        addSeparator(mainJPanel);
-
         addUsernameTextField(mainJPanel);
-
-        if (flag) {
-            addMailTextField(mainJPanel);
-        }
 
         addPasswordTextField(mainJPanel);
 
         addLoginButton(mainJPanel);
 
         addRegisterButton(mainJPanel);
+
+        addCloseButton(mainJPanel);
 
         this.add(mainJPanel);
         this.pack();
@@ -85,14 +81,6 @@ public class LoginUI extends JFrame {
         panel1.addMouseMotionListener(ma);
 
         return panel1;
-    }
-
-    private void addSeparator(JPanel panel1) {
-        JSeparator separator1 = new JSeparator();
-        separator1.setOrientation(SwingConstants.VERTICAL);
-        separator1.setForeground(UIUtils.COLOR_OUTLINE);
-        panel1.add(separator1);
-        separator1.setBounds(310, 80, 1, 240);
     }
 
     private void addLogo(JPanel panel1) {
@@ -171,6 +159,9 @@ public class LoginUI extends JFrame {
             }
         });
 
+        if (!flag) {
+            mailField.setVisible(false);
+        }
         panel1.add(mailField);
     }
 
@@ -310,15 +301,32 @@ public class LoginUI extends JFrame {
 
     private void addRegisterButton(JPanel panel1) {
         if (!flag) {
-            panel1.add(new HyperlinkText(UIUtils.BUTTON_TEXT_REGISTER, 524, 330, () -> {
-                this.dispose();
-                new LoginUI(server, true);
+            panel1.add(new HyperlinkText(UIUtils.BUTTON_TEXT_REGISTER, 520, 330, () -> {
+                flag = true;
+                for (Component component : panel1.getComponents()) {
+                    component.setVisible(false);
+                }
+                addLogo(panel1);
+                addUsernameTextField(panel1);
+                addPasswordTextField(panel1);
+                addMailTextField(panel1);
+                addLoginButton(panel1);
+                addRegisterButton(panel1);
+                addCloseButton(panel1);
             }));
         }
         if (flag) {
-            panel1.add(new HyperlinkText(UIUtils.BUTTON_TEXT_LOGIN, 524, 330, () -> {
-                this.dispose();
-                new LoginUI(server, false);
+            panel1.add(new HyperlinkText(UIUtils.BUTTON_TEXT_LOGIN, 528, 330, () -> {
+                flag = false;
+                for (Component component : panel1.getComponents()) {
+                    component.setVisible(false);
+                }
+                addLogo(panel1);
+                addUsernameTextField(panel1);
+                addPasswordTextField(panel1);
+                addLoginButton(panel1);
+                addRegisterButton(panel1);
+                addCloseButton(panel1);
             }));
         }
     }
@@ -332,7 +340,7 @@ public class LoginUI extends JFrame {
                     return;
                 }
                 this.dispose();
-                CallbackClientInterface callbackObj = new CallbackClientImpl(username);
+                IClient callbackObj = new ClientImpl(username);
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
@@ -349,7 +357,7 @@ public class LoginUI extends JFrame {
                     return;
                 }
                 this.dispose();
-                CallbackClientInterface callbackObj = new CallbackClientImpl(username);
+                IClient callbackObj = new ClientImpl(username);
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
@@ -363,4 +371,12 @@ public class LoginUI extends JFrame {
             toaster.error("Error al iniciar sesion: " + e.getMessage());
         }
     }
+
+    public void addCloseButton(JPanel panel1) {
+        panel1.add(new HyperlinkText("×", 775, 10, () -> {
+            LoginUI.this.dispose();
+            System.exit(0);
+        }));
+    }
+
 }

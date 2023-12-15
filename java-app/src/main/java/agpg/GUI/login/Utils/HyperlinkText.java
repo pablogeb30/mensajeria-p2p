@@ -12,6 +12,9 @@ public class HyperlinkText extends JLabel {
     public HyperlinkText(String hyperlinkText, int xPos, int yPos, Runnable hyperlinkAction) {
         super(hyperlinkText);
         setForeground(COLOR_OUTLINE);
+        if (xPos == -1 && yPos == -1) {
+            setForeground(Color.BLACK);
+        }
         setFont(FONT_FORGOT_PASSWORD);
         setCursor(getPredefinedCursor(HAND_CURSOR));
 
@@ -29,6 +32,9 @@ public class HyperlinkText extends JLabel {
             @Override
             public void mouseExited(MouseEvent e) {
                 setForeground(COLOR_OUTLINE);
+                if (xPos == -1 && yPos == -1) {
+                    setForeground(Color.BLACK);
+                }
             }
         });
 
