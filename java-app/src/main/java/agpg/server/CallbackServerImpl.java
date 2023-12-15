@@ -3,21 +3,17 @@ package agpg.server;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.PublicKey;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import org.mindrot.jbcrypt.BCrypt;
 import agpg.client.CallbackClientInterface;
 import java.rmi.RemoteException;
+import java.security.PublicKey;
+import java.sql.*;
+import org.mindrot.jbcrypt.BCrypt;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.HashMap;
+import java.util.ArrayList;
+
 
 public class CallbackServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
@@ -32,9 +28,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         online, offline
     }
 
-
     // Mapa de clientes registrados
-    private HashMap<String, CallbackClientInterface> clientMap;
+    private ConcurrentHashMap<String, CallbackClientInterface> clientMap;
 
     // Mapa de claves públicas de los clientes
     private ConcurrentHashMap<String, PublicKey> publicKeyMap;
@@ -61,8 +56,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
         try {
             // Comprobar si se han especificado las propiedades de la base de datos
-            if (!properties.containsKey("db.jdbcUrl") || !properties.containsKey("db.username") 
-                || !properties.containsKey("db.password") || !properties.containsKey("db.maxPoolSize")) {
+            if (!properties.containsKey("db.jdbcUrl") || !properties.containsKey("db.username")
+                    || !properties.containsKey("db.password") || !properties.containsKey("db.maxPoolSize")) {
 
                 System.err.println("No se han especificado las propiedades necesarias de la base de datos.");
                 System.exit(1);
@@ -89,65 +84,78 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
     public CallbackServerImpl() throws RemoteException {
         super();
-        this.clientMap = new HashMap<>();
+        this.clientMap = new ConcurrentHashMap<>();
         this.publicKeyMap = new ConcurrentHashMap<>();
     }
 
+    
 
-
-    // Metodo que registra a un cliente para que reciba callbacks
+    // Método que registra a un cliente para que reciba callbacks.
     public synchronized void registerCallback(CallbackClientInterface cObject) throws RemoteException {
-        if (!(clientMap.containsKey(cObject.getUsername()))) {
-            // En vez de anhadir al mapa, revisar base de datos (consulta SQL)
-            cObject.setFriends(clientMap, publicKeyMap);
 
+        // Verificar si el cliente ya está registrado para evitar duplicados
+        if (!clientMap.containsKey(cObject.getUsername())) {
+
+            // Inicializamos el mapa de clientes
+            cObject.setClients(filterClients(cObject.getUsername()), publicKeyMap);
+
+            // Registramos al cliente en el mapa
             clientMap.put(cObject.getUsername(), cObject);
-            try{
-            publicKeyMap.put(cObject.getUsername(), cObject.registroConServidor());
-            }catch (Exception e) {System.out.println("Error al registrar la clave publica: " + e.getMessage());}
 
-            try{
-            publicKeyMap.put(cObject.getUsername(), cObject.registroConServidor());
-            }catch (Exception e) {System.out.println("Error al registrar la clave publica: " + e.getMessage());}
-            
-            updateClientsCallback(cObject);
+            // Registrar la clave pública del cliente
+            try {
+                publicKeyMap.put(cObject.getUsername(), cObject.registroConServidor());
+            } catch (Exception e) {
+                System.err.println("Error al registrar la clave publica: " + e.getMessage());
+            }
+            // Notificar a todos los clientes sobre la actualización
+            ConcurrentHashMap<String, CallbackClientInterface> amigos = filterClients(cObject.getUsername());
+            for (String amigo : amigos.keySet()) {
+                amigos.get(amigo).addClient(cObject, publicKeyMap.get(cObject.getUsername()));
+            }
             System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
         } else {
             System.out.println("Usuario ya conectado: " + cObject.getUsername());
         }
     }
 
-    // Metodo que cancela el registro de un cliente para que no reciba callbacks
+    // Método que cancela el registro de un cliente para que no reciba callbacks
     public synchronized void unregisterCallback(CallbackClientInterface cObject) throws RemoteException {
+        // Verificar si el cliente está registrado
         if (clientMap.containsKey(cObject.getUsername())) {
+            // Remover el cliente del mapa de clientes registrados
             clientMap.remove(cObject.getUsername());
-            updateClientsCallback(cObject);
+
+            // Notificar a los demás clientes sobre la desconexión
+            cObject.setClients(filterClients(cObject.getUsername()), publicKeyMap);
             System.out.println("Usuario desconectado: " + cObject.getUsername());
-        }
 
-        if(publicKeyMap.containsKey(cObject.getUsername())){
+            // Remover también la clave pública del cliente, si está presente
             publicKeyMap.remove(cObject.getUsername());
-        }
-
-        else {
+        } else {
             System.out.println("Usuario no estaba conectado: " + cObject.getUsername());
         }
     }
 
+    // Filtramos el mapa de clientes para obtener solo los que son amigso del usuario
+    private ConcurrentHashMap<String, CallbackClientInterface> filterClients(String username) {
 
-    // Metodo que llama al metodo remoto del cliente para actualizar los amigos
-    private void updateClientsCallback(CallbackClientInterface cObject) {
-        try {
-            for (CallbackClientInterface client : clientMap.values()) {
-                client.updateFriends(cObject);
-            }
-        } catch (RemoteException e) {
-            System.out.println("Excepcion en updateClientsCallback: " + e);
+        ConcurrentHashMap<String, CallbackClientInterface> filteredClients = new ConcurrentHashMap<>();
+
+        try{
+        for (String friend : obtenerAmigos(username)) {
+            // Si el amigo está conectado, lo añadimos al mapa de clientes filtrados
+            if (clientMap.containsKey(friend)) filteredClients.put(friend, clientMap.get(friend));
         }
+        }catch(RemoteException e){
+            System.err.println("Error al filtrar clientes: " + e.getMessage());
+        }
+        return filteredClients;
     }
 
 
 
+    
     // Método para registrar un usuario en el servidor
     public boolean iniciarSesion(String username, String password)
             throws RemoteException {
@@ -170,8 +178,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                                 pstmt2.setString(1, EstadoUsuario.online.toString());
                                 pstmt2.setString(2, username);
                                 pstmt2.executeUpdate();
+                                
                             }
-
                             return true;
                         }
                     }
@@ -199,7 +207,6 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                 pstmt.setString(3, correo);
                 pstmt.setString(4, EstadoUsuario.online.toString());
                 pstmt.executeUpdate();
-
                 return true; // Usuario registrado con éxito
             }
         } catch (SQLException e) {
@@ -267,8 +274,6 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                 pstmt.setString(1, EstadoUsuario.offline.toString());
                 pstmt.setString(2, username);
                 pstmt.executeUpdate();
-
-                // unregisterCallback(clientMap.get(username));
             }
         } catch (SQLException e) {
             System.err.println("Error al cerrar sesión: " + e.getMessage());
@@ -399,12 +404,12 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
     }
 
     // Método para obtener una lista de usuarios recomendados para enviar
-    public List<String> obtenerUsuariosRecomendados(String username) throws RemoteException {
+    public ArrayList<String> obtenerUsuariosRecomendados(String username) throws RemoteException {
 
         // Obtener el ID del usuario actual
         int userID = obtenerUserID(username);
 
-        List<String> usuariosRecomendados = new ArrayList<>();
+        ArrayList<String> usuariosRecomendados = new ArrayList<>();
         String sql = "SELECT Username FROM Usuarios WHERE UserID NOT IN (SELECT UserID1 FROM Amigos WHERE UserID2 = ?) "
                 +
                 "AND UserID NOT IN (SELECT UserID2 FROM Amigos WHERE UserID1 = ?) " +
@@ -454,12 +459,12 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
     }
 
     // Método para obtener una lista de solicitudes de amistad pendientes
-    public List<String> obtenerSolicitudesAmistad(String username) throws RemoteException {
+    public ArrayList<String> obtenerSolicitudesAmistad(String username) throws RemoteException {
 
         // Obtener el ID del usuario actual
         int userID = obtenerUserID(username);
 
-        List<String> solicitudesAmistad = new ArrayList<>();
+        ArrayList<String> solicitudesAmistad = new ArrayList<>();
         String sql = "SELECT Username FROM Usuarios WHERE UserID IN (SELECT UserID1 FROM Amigos WHERE UserID2 = ? AND EstadoAmistad = 'pendiente');";
 
         try (Connection conn = dataSource.getConnection();
@@ -481,12 +486,12 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
     }
 
     // Metodo que devuelve la lista de amigos de un usuario
-    public List<String> obtenerAmigos(String username) throws RemoteException {
+    public ArrayList<String> obtenerAmigos(String username) throws RemoteException {
 
         // Obtener el ID del usuario actual
         int userID = obtenerUserID(username);
 
-        List<String> amigos = new ArrayList<>();
+        ArrayList<String> amigos = new ArrayList<>();
         // Lista de amigos del usuario actual --> Solicitudes aceptadas =
         // bidireccionales
         String sql = "SELECT Username FROM Usuarios WHERE UserID IN (SELECT UserID1 FROM Amigos WHERE UserID2 = ? AND EstadoAmistad = 'aceptada') OR UserID IN (SELECT UserID2 FROM Amigos WHERE UserID1 = ? AND EstadoAmistad = 'aceptada');";
@@ -529,5 +534,5 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             throw new RemoteException("Error al comprobar si el usuario está conectado", e);
         }
     }
-    
+
 }

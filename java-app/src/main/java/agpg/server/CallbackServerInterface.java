@@ -3,7 +3,7 @@ package agpg.server;
 // Importamos las librerias necesarias (RMI y CallbackClientInterface)
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.List;
+import java.util.ArrayList;
 import agpg.client.CallbackClientInterface;
 
 // Interfaz del servidor
@@ -26,9 +26,9 @@ public interface CallbackServerInterface extends Remote {
 
         // Metodo que cancela el registro de un cliente para que no reciba callbacks
         public void unregisterCallback(CallbackClientInterface cObject) throws RemoteException;
-
+ 
         // Metodo para obtener una lista de usuarios recomendados
-        public List<String> obtenerUsuariosRecomendados(String username) throws RemoteException;
+        public ArrayList<String> obtenerUsuariosRecomendados(String username) throws RemoteException;
 
         // Metodo para enviar una solicitud de amistad
         public void enviarSolicitudAmistad(String userName, String friendName) throws RemoteException;
@@ -41,10 +41,10 @@ public interface CallbackServerInterface extends Remote {
         public void rechazarSolicitudAmistad(String userName, String friendName) throws RemoteException;
 
         // Metodo para obtener una lista de las solicitudes de amistad pendientes
-        public List<String> obtenerSolicitudesAmistad(String userName) throws RemoteException;
+        public ArrayList<String> obtenerSolicitudesAmistad(String userName) throws RemoteException;
 
         // Metodo para obtener una lista de los amigos
-        public List<String> obtenerAmigos(String userName) throws RemoteException;
+        public ArrayList<String> obtenerAmigos(String userName) throws RemoteException;
 
         // Metodo para comprobar si un usuario esta conectado
         public boolean estaConectado(String userName) throws RemoteException;

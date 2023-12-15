@@ -339,8 +339,10 @@ public class LoginUI extends JFrame {
                     toaster.error("Usuario y/o contrasenha no validos.");
                     return;
                 }
+                System.out.println("ANTES ELIMINAR VENTANA");
                 this.dispose();
                 CallbackClientInterface callbackObj = new CallbackClientImpl(username);
+                System.out.println("ANTES REGISTRAR CALLBACK");
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {

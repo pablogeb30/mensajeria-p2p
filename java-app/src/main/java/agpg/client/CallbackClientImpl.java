@@ -2,7 +2,6 @@ package agpg.client;
 
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
-import java.util.HashMap;
 import javax.crypto.Cipher;
 import agpg.GUI.chat.ChatUI;
 import agpg.GUI.chat.Message;
@@ -13,15 +12,13 @@ import java.security.PublicKey;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 // Implementacion de la interfaz del cliente
 public class CallbackClientImpl extends UnicastRemoteObject implements CallbackClientInterface {
 
-    
-    private String username;                                                // Nombre del cliente
-    private PrivateKey privateKey;                                          // Clave privada del cliente
-    private HashMap<String, CallbackClientInterface> clientMap;             // Mapa de clientes registrados
-    private ConcurrentHashMap<String, PublicKey> publicKeys;                // Mapa de las clave publicas de los clientes
+    private String username; // Nombre del cliente
+    private PrivateKey privateKey; // Clave privada del cliente
+    private ConcurrentHashMap<String, CallbackClientInterface> clients; // Mapa de clientes registrados
+    private ConcurrentHashMap<String, PublicKey> publicKeys; // Mapa de las clave publicas de los clientes
 
     // GUI del cliente
     private ChatUI gui;
@@ -30,9 +27,8 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
     public CallbackClientImpl(String username) throws RemoteException {
         super();
         this.username = username;
-        clientMap = new HashMap<>();
+        clients = new ConcurrentHashMap<>();
         publicKeys = new ConcurrentHashMap<>();
-        // Creamos la interfaz grafica pasandole la referencia al objeto cliente
         gui = new ChatUI(this);
     }
 
@@ -41,47 +37,52 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         return username;
     }
 
-    // Getter del mapa de clientes
-    public HashMap<String, CallbackClientInterface> getClientMap() throws RemoteException {
-        return clientMap;
-    }
-
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
-    public void setFriends(HashMap<String, CallbackClientInterface> clientMap, ConcurrentHashMap<String, PublicKey> mapaClaves) throws RemoteException {
+    public void setClients(ConcurrentHashMap<String, CallbackClientInterface> clients, ConcurrentHashMap<String, PublicKey> keys) throws RemoteException {
 
-        for (CallbackClientInterface client : clientMap.values()) {
+        try {
+            for (String nombreCliente : clients.keySet()) {
+                addClient(clients.get(nombreCliente), keys.get(nombreCliente));
+            }
 
-            this.clientMap.put(client.getUsername(), client);
-
-            this.publicKeys.put(client.getUsername(), mapaClaves.get(client.getUsername()));
-           
-            gui.addClient(client.getUsername());  // Actualizamos la interfaz grafica anhadiendo los clientes
+        } catch (Exception e) {
+            System.out.println("Error al inicializar el mapa de clientes: " + e.getMessage());
         }
 
     }
 
-    // Metodo ejecutado por el servidor para actualizar el mapa de clientes
-    public void updateFriends(CallbackClientInterface cObject) throws RemoteException {
+    // Metodo ejecutado por el servidor para anhadir un cliente
+    public void addClient(CallbackClientInterface client, PublicKey key) throws RemoteException {
 
-        if (!(clientMap.containsKey(cObject.getUsername())) && !(cObject.getUsername().equals(this.getUsername()))) {
+        try {
+            // Actualizamos el mapa de clientes
+            clients.put(client.getUsername(), client);
 
-            clientMap.put(cObject.getUsername(), cObject);
-        
-            System.out.println("Nuevo usuario conectado: " + cObject.getUsername());
-            
-            gui.addClient(cObject.getUsername()); // Actualizamos la interfaz grafica anhadiendo los clientes
+            publicKeys.put(client.getUsername(), key);
 
-        } else {
+            System.out.println("Nuevo usuario conectado: " + client.getUsername());
 
-            if (!cObject.getUsername().equals(this.getUsername())) {
+            // Actualizamos la interfaz de amigos
+            gui.addClient(client.getUsername());
 
-                clientMap.remove(cObject.getUsername());
-                System.out.println("Usuario desconectado: " + cObject.getUsername());
-
-                gui.removeClient(cObject.getUsername()); // Actualizamos la interfaz grafica eliminando los clientes
-
-            }
+        } catch (Exception e) {
+            System.out.println("Error al anhadir un cliente: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    // Metodo ejecutado por el servidor para eliminar un cliente
+    public void removeClient(CallbackClientInterface client) throws RemoteException {
+
+        // Actualizamos el mapa de clientes
+        clients.remove(client.getUsername());
+
+        publicKeys.remove(client.getUsername());
+
+        System.out.println("Usuario desconectado: " + client.getUsername());
+
+        // Actualizamos la interfaz de amigos
+        gui.removeClient(client.getUsername());
     }
 
     // Metodo ejecutado por un cliente para mandar un mensaje a otro cliente
@@ -89,14 +90,11 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         try {
             String encryptedMessage = encryptMessage(message, this.publicKeys.get(username));
 
-            clientMap.get(username).notifyMe(this.getUsername(), encryptedMessage);
+            clients.get(username).notifyMe(this.getUsername(), encryptedMessage);
 
             System.out.println("Mensaje enviado: " + encryptedMessage);
 
         } catch (Exception e) {
-
-            
-        
 
             System.out.println("Error al encriptar el mensaje: " + e.getMessage());
         }
@@ -115,8 +113,6 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         }
     }
 
-    
-
     // Metodo para crear la clave publica del cliente
     private KeyPair generarClave() throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -132,7 +128,6 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
 
         return keyPair.getPublic();
     }
-    
 
     private String encryptMessage(String message, PublicKey publicKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
