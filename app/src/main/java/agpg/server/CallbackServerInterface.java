@@ -46,7 +46,10 @@ public interface CallbackServerInterface extends Remote {
         // Metodo para obtener una lista de los amigos
         public ArrayList<String> obtenerAmigos(String userName) throws RemoteException;
 
-        // Metodo para comprobar si un usuario esta conectado
-        public boolean estaConectado(String userName) throws RemoteException;
+        // Metodo para eliminar un amigo
+        public void eliminarAmigo(String userName, String friendName) throws RemoteException;
+
+        // Metodo para eliminar la cuenta de un usuario
+        public boolean eliminarCuenta(String userName, String password) throws RemoteException;
 
 }

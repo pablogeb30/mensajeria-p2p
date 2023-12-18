@@ -89,7 +89,7 @@ public class CallbackClient {
             }));
 
             while (true) {
-                System.out.println("¿Qué desea hacer? (sugerencias/amigos/solicitudes/cambiar contrasena/exit)");
+                System.out.println("¿Qué desea hacer? (sugerencias/amigos/solicitudes/cambiar contrasena/elimiar cuenta/eliminar amigo/exit)");
                 String input = scanner.nextLine().toUpperCase();
                 switch (input) {
                     case "EXIT":
@@ -155,6 +155,23 @@ public class CallbackClient {
                             server.rechazarSolicitudAmistad(username, friendName);
                         }
                         break;
+
+                    case "ELIMINAR AMIGO":
+                        System.out.println("Introduce el nombre del amigo que desea eliminar:");
+                        String friendName = scanner.nextLine();
+                        server.eliminarAmigo(username, friendName);
+                        break;
+
+                    case "ELIMINAR CUENTA":
+                        System.out.println("Introduce tu contraseña:");
+                        password = scanner.nextLine();
+                        if (server.eliminarCuenta(username, password)) {
+                            System.out.println("Cuenta eliminada correctamente.");
+                            System.exit(0);
+                        } else {
+                            System.out.println("No se pudo eliminar la cuenta.");
+                        }
+                        break;
                     default:
                         System.out.println("Opción inválida. Por favor, intente nuevamente.");
                         break;
@@ -165,10 +182,22 @@ public class CallbackClient {
                 }
             }
 
+            System.out.println("Sesión finalizada.");
+
+            // Cerrar sesión
+            server.cerrarSesion(username);
+
+            // Cerrar el scanner
+            scanner.close();
+
+            // Cerrar el cliente
+            System.exit(0);
+
            
 
         } catch (Exception e) {
             System.out.println("Excepción en el main de CallbackClient: " + e.getMessage());
+            e.printStackTrace();
 
         }
 
