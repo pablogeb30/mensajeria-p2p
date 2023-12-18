@@ -544,4 +544,71 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
+
+    // Método para eliminar un amigo --> Marcamos la solicitud como rechazada
+    public void eliminarAmigo(String userName, String friendName) throws RemoteException {
+
+        // Obtener el ID del usuario actual
+        int userID = obtenerUserID(userName);
+
+        // Obtener el ID del amigo
+        int friendID = obtenerUserID(friendName);
+
+        // Actualizar la solicitud de amistad en la base de datos
+        String sql = "UPDATE Amigos SET EstadoAmistad = 'rechazada' WHERE UserID1 = ? AND UserID2 = ?;";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, friendID);
+            pstmt.setInt(2, userID);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar amigo: " + e.getMessage());
+            throw new RemoteException("Error al eliminar amigo", e);
+        }
+    }
+
+    // Método para eliminar la cuenta de usuario, se solicita la contraseña para confirmar --> Se elimina el usuario y antes todas sus solicitudes de amistad
+    public boolean eliminarCuenta(String userName, String password) throws RemoteException {
+        
+        try (Connection conn = dataSource.getConnection()) {
+            if (!usuarioYaExiste(userName, conn)) {
+                return false; // Usuario no existe
+            }
+
+            String sql = "SELECT Password FROM Usuarios WHERE Username = ?;";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, userName);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        String hashedPassword = rs.getString("Password");
+
+                        if (BCrypt.checkpw(password, hashedPassword)) {
+
+                            String sql2 = "DELETE FROM Amigos WHERE UserID1 = ? OR UserID2 = ?;";
+                            try (PreparedStatement pstmt2 = conn.prepareStatement(sql2)) {
+                                pstmt2.setInt(1, obtenerUserID(userName));
+                                pstmt2.setInt(2, obtenerUserID(userName));
+                                pstmt2.executeUpdate();
+                            }
+
+                            String sql3 = "DELETE FROM Usuarios WHERE Username = ?;";
+                            try (PreparedStatement pstmt3 = conn.prepareStatement(sql3)) {
+                                pstmt3.setString(1, userName);
+                                pstmt3.executeUpdate();
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false; // Contraseña incorrecta
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar la cuenta: " + e.getMessage());
+            throw new RemoteException("Error al eliminar la cuenta", e);
+        }
+    }
+
+
+  
+
 }
