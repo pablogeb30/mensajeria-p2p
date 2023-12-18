@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import javax.crypto.Cipher;
 import agpg.GUI.chat.ChatUI;
 import agpg.GUI.chat.Message;
+import agpg.server.CallbackServerInterface;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -24,12 +25,12 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
     private ChatUI gui;
 
     // Constructor de la clase
-    public CallbackClientImpl(String username) throws RemoteException {
+    public CallbackClientImpl(CallbackServerInterface server, String username) throws RemoteException {
         super();
         this.username = username;
         clients = new ConcurrentHashMap<>();
         publicKeys = new ConcurrentHashMap<>();
-        gui = new ChatUI(this);
+        gui = new ChatUI(server, this);
     }
 
     // Getter del nombre del cliente
@@ -38,50 +39,37 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
     }
 
     // Metodo ejecutado por el servidor para inicializar el mapa de clientes
-    public void setClients(ConcurrentHashMap<String, CallbackClientInterface> clients, ConcurrentHashMap<String, PublicKey> keys) throws RemoteException {
-
-        try {
-            for (String nombreCliente : clients.keySet()) {
-                addClient(clients.get(nombreCliente), keys.get(nombreCliente));
-            }
-
-        } catch (Exception e) {
-            System.out.println("Error al inicializar el mapa de clientes: " + e.getMessage());
+    public void setClients(ConcurrentHashMap<String, CallbackClientInterface> clients,
+            ConcurrentHashMap<String, PublicKey> keys) throws RemoteException {
+        for (String nombreCliente : clients.keySet()) {
+            addClient(clients.get(nombreCliente), keys.get(nombreCliente));
         }
-
     }
 
     // Metodo ejecutado por el servidor para anhadir un cliente
     public void addClient(CallbackClientInterface client, PublicKey key) throws RemoteException {
 
-        try {
-            // Actualizamos el mapa de clientes
-            clients.put(client.getUsername(), client);
+        // Actualizamos el mapa de clientes y el mapa de claves publicas
+        clients.put(client.getUsername(), client);
+        publicKeys.put(client.getUsername(), key);
 
-            publicKeys.put(client.getUsername(), key);
+        System.out.println("Nuevo usuario conectado: " + client.getUsername());
 
-            System.out.println("Nuevo usuario conectado: " + client.getUsername());
-
-            // Actualizamos la interfaz de amigos
-            gui.addClient(client.getUsername());
-
-        } catch (Exception e) {
-            System.out.println("Error al anhadir un cliente: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Actualizamos la interfaz grafica
+        gui.addFriend(client.getUsername());
     }
 
     // Metodo ejecutado por el servidor para eliminar un cliente
     public void removeClient(CallbackClientInterface client) throws RemoteException {
 
-        // Actualizamos el mapa de clientes
+        // Actualizamos el mapa de clientes y el mapa de claves publicas
         clients.remove(client.getUsername());
-
         publicKeys.remove(client.getUsername());
 
         System.out.println("Usuario desconectado: " + client.getUsername());
 
-        // Actualizamos la interfaz de amigos
+        // Actualizamos la interfaz grafica
+        gui.removeFriend(client.getUsername());
         gui.removeClient(client.getUsername());
     }
 
@@ -111,6 +99,22 @@ public class CallbackClientImpl extends UnicastRemoteObject implements CallbackC
         } catch (Exception e) {
             System.out.println("Error al desencriptar el mensaje: " + e.getMessage());
         }
+    }
+
+    // Metodo ejecutado por la interfaz grafica para obtener el numero de amigos
+    // conectados
+    public int getNumClients() throws RemoteException {
+        return clients.size();
+    }
+
+    // Metodo para anhadir una solicitud de amistad en la GUI
+    public void recibirSolicitudAmistad(String username) throws RemoteException {
+        gui.addRequest(username);
+    }
+
+    // Metodo para eliminar solicitud pendinte de amistad en la GUI
+    public void eliminarSolicitudAmistad(String username) throws RemoteException {
+        gui.removeSendRequest(username);
     }
 
     // Metodo para crear la clave publica del cliente

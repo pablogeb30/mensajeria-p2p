@@ -164,9 +164,7 @@ public class CallbackClient {
                     break;
                 }
             }
-
-           
-
+            scanner.close();
         } catch (Exception e) {
             System.out.println("Excepción en el main de CallbackClient: " + e.getMessage());
 

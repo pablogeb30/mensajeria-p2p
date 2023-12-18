@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class UIUtils {
     public static final Font FONT_GENERAL_UI = new Font("Segoe UI", Font.PLAIN, 20);
     public static final Font FONT_FORGOT_PASSWORD = new Font("Segoe UI", Font.PLAIN, 14);
+    public static final Font FONT_MAIN_TEXT = new Font("Segoe UI", Font.PLAIN, 16);
 
     public static final Color COLOR_OUTLINE = new Color(103, 112, 120);
     public static final Color COLOR_BACKGROUND = new Color(37, 51, 61);
@@ -21,6 +22,7 @@ public class UIUtils {
     public static final String PLACEHOLDER_TEXT_USERNAME = "Username";
     public static final String PLACEHOLDER_TEXT_MAIL = "Mail";
     public static final String PLACEHOLDER_TEXT_PASSWORD = "Password";
+    public static final String PLACEHOLDER_TEXT_SEARCH = "Buscar usuario";
 
     public static final int ROUNDNESS = 8;
 

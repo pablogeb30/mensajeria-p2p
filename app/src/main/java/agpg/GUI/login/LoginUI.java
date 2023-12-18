@@ -34,8 +34,6 @@ public class LoginUI extends JFrame {
 
         addRegisterButton(mainJPanel);
 
-        addCloseButton(mainJPanel);
-
         this.add(mainJPanel);
         this.pack();
         this.setVisible(true);
@@ -48,7 +46,6 @@ public class LoginUI extends JFrame {
     }
 
     private JPanel getMainJPanel() {
-        this.setUndecorated(true);
 
         Dimension size = new Dimension(800, 400);
 
@@ -312,7 +309,6 @@ public class LoginUI extends JFrame {
                 addMailTextField(panel1);
                 addLoginButton(panel1);
                 addRegisterButton(panel1);
-                addCloseButton(panel1);
             }));
         }
         if (flag) {
@@ -326,7 +322,6 @@ public class LoginUI extends JFrame {
                 addPasswordTextField(panel1);
                 addLoginButton(panel1);
                 addRegisterButton(panel1);
-                addCloseButton(panel1);
             }));
         }
     }
@@ -339,10 +334,8 @@ public class LoginUI extends JFrame {
                     toaster.error("Usuario y/o contrasenha no validos.");
                     return;
                 }
-                System.out.println("ANTES ELIMINAR VENTANA");
                 this.dispose();
-                CallbackClientInterface callbackObj = new CallbackClientImpl(username);
-                System.out.println("ANTES REGISTRAR CALLBACK");
+                CallbackClientInterface callbackObj = new CallbackClientImpl(server, username);
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
@@ -359,7 +352,7 @@ public class LoginUI extends JFrame {
                     return;
                 }
                 this.dispose();
-                CallbackClientInterface callbackObj = new CallbackClientImpl(username);
+                CallbackClientInterface callbackObj = new CallbackClientImpl(server, username);
                 server.registerCallback(callbackObj);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     try {
@@ -370,15 +363,8 @@ public class LoginUI extends JFrame {
                 }));
             }
         } catch (Exception e) {
-            toaster.error("Error al iniciar sesion: " + e.getMessage());
+            toaster.error("Error al iniciar sesion.");
         }
-    }
-
-    public void addCloseButton(JPanel panel1) {
-        panel1.add(new HyperlinkText("×", 775, 10, () -> {
-            LoginUI.this.dispose();
-            System.exit(0);
-        }));
     }
 
 }

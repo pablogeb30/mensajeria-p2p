@@ -14,7 +14,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 
-
 public class CallbackServerImpl extends UnicastRemoteObject implements CallbackServerInterface {
 
     // Archivo de configuración
@@ -88,16 +87,11 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         this.publicKeyMap = new ConcurrentHashMap<>();
     }
 
-    
-
     // Método que registra a un cliente para que reciba callbacks.
     public synchronized void registerCallback(CallbackClientInterface cObject) throws RemoteException {
 
         // Verificar si el cliente ya está registrado para evitar duplicados
         if (!clientMap.containsKey(cObject.getUsername())) {
-
-            // Inicializamos el mapa de clientes
-            cObject.setClients(filterClients(cObject.getUsername()), publicKeyMap);
 
             // Registramos al cliente en el mapa
             clientMap.put(cObject.getUsername(), cObject);
@@ -108,6 +102,10 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             } catch (Exception e) {
                 System.err.println("Error al registrar la clave publica: " + e.getMessage());
             }
+
+            // Inicializamos el mapa de clientes
+            cObject.setClients(filterClients(cObject.getUsername()), publicKeyMap);
+
             // Notificar a todos los clientes sobre la actualización
             ConcurrentHashMap<String, CallbackClientInterface> amigos = filterClients(cObject.getUsername());
             for (String amigo : amigos.keySet()) {
@@ -125,37 +123,37 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         if (clientMap.containsKey(cObject.getUsername())) {
             // Remover el cliente del mapa de clientes registrados
             clientMap.remove(cObject.getUsername());
-
-            // Notificar a los demás clientes sobre la desconexión
-            cObject.setClients(filterClients(cObject.getUsername()), publicKeyMap);
-            System.out.println("Usuario desconectado: " + cObject.getUsername());
-
             // Remover también la clave pública del cliente, si está presente
             publicKeyMap.remove(cObject.getUsername());
+            // Notificar a todos los clientes sobre la actualización
+            ConcurrentHashMap<String, CallbackClientInterface> amigos = filterClients(cObject.getUsername());
+            for (String amigo : amigos.keySet()) {
+                amigos.get(amigo).removeClient(cObject);
+            }
+            System.out.println("Usuario desconectado: " + cObject.getUsername());
         } else {
             System.out.println("Usuario no estaba conectado: " + cObject.getUsername());
         }
     }
 
-    // Filtramos el mapa de clientes para obtener solo los que son amigso del usuario
+    // Filtramos el mapa de clientes para obtener solo los que son amigso del
+    // usuario
     private ConcurrentHashMap<String, CallbackClientInterface> filterClients(String username) {
 
         ConcurrentHashMap<String, CallbackClientInterface> filteredClients = new ConcurrentHashMap<>();
 
-        try{
-        for (String friend : obtenerAmigos(username)) {
-            // Si el amigo está conectado, lo añadimos al mapa de clientes filtrados
-            if (clientMap.containsKey(friend)) filteredClients.put(friend, clientMap.get(friend));
-        }
-        }catch(RemoteException e){
+        try {
+            for (String friend : obtenerAmigos(username)) {
+                // Si el amigo está conectado, lo añadimos al mapa de clientes filtrados
+                if (clientMap.containsKey(friend))
+                    filteredClients.put(friend, clientMap.get(friend));
+            }
+        } catch (RemoteException e) {
             System.err.println("Error al filtrar clientes: " + e.getMessage());
         }
         return filteredClients;
     }
 
-
-
-    
     // Método para registrar un usuario en el servidor
     public boolean iniciarSesion(String username, String password)
             throws RemoteException {
@@ -178,7 +176,6 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
                                 pstmt2.setString(1, EstadoUsuario.online.toString());
                                 pstmt2.setString(2, username);
                                 pstmt2.executeUpdate();
-                                
                             }
                             return true;
                         }
@@ -287,6 +284,11 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         int userID = obtenerUserID(userName);
         int friendID = obtenerUserID(friendName);
         insertarSolicitudAmistad(userID, friendID);
+        for (String amigo : clientMap.keySet()) {
+            if (amigo.equals(friendName)) {
+                clientMap.get(friendName).recibirSolicitudAmistad(userName);
+            }
+        }
     }
 
     // Método para validar una solicitud de amistad
@@ -374,6 +376,11 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             pstmt.setInt(1, friendID);
             pstmt.setInt(2, userID);
             pstmt.executeUpdate();
+            // Notificar a los dos clientes sobre la actualización
+            clientMap.get(userName).addClient(clientMap.get(friendName), publicKeyMap.get(friendName));
+            clientMap.get(friendName).addClient(clientMap.get(userName), publicKeyMap.get(userName));
+            // Eliminar la solicitud de amistad de la GUI
+            clientMap.get(friendName).eliminarSolicitudAmistad(userName);
         } catch (SQLException e) {
             System.err.println("Error al aceptar solicitud de amistad: " + e.getMessage());
             throw new RemoteException("Error al aceptar solicitud de amistad", e);
@@ -397,6 +404,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             pstmt.setInt(1, friendID);
             pstmt.setInt(2, userID);
             pstmt.executeUpdate();
+            // Eliminar la solicitud de amistad de la GUI
+            clientMap.get(friendName).eliminarSolicitudAmistad(userName);
         } catch (SQLException e) {
             System.err.println("Error al rechazar solicitud de amistad: " + e.getMessage());
             throw new RemoteException("Error al rechazar solicitud de amistad", e);
