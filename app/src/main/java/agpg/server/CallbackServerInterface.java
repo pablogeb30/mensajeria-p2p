@@ -51,5 +51,9 @@ public interface CallbackServerInterface extends Remote {
 
         // Metodo para eliminar la cuenta de un usuario
         public boolean eliminarCuenta(String userName, String password) throws RemoteException;
+        
+        // Funcion que te devuelve un ArrayList con las solicitudes de amistad enviadas por un usuario y todavia no han sido aceptadas
+        public ArrayList<String> obtenerSolicitudesEnviadas(String username) throws RemoteException;
+
 
 }

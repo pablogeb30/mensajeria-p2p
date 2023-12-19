@@ -89,7 +89,7 @@ public class CallbackClient {
             }));
 
             while (true) {
-                System.out.println("¿Qué desea hacer? (sugerencias/amigos/solicitudes/cambiar contrasena/elimiar cuenta/eliminar amigo/exit)");
+                System.out.println("¿Qué desea hacer? (sugerencias/amigos/solicitudes recibidas/solicitudes enviadas/cambiar contrasena/elimiar cuenta/eliminar amigo/exit)");
                 String input = scanner.nextLine().toUpperCase();
                 switch (input) {
                     case "EXIT":
@@ -154,6 +154,11 @@ public class CallbackClient {
                             String friendName = scanner.nextLine();
                             server.rechazarSolicitudAmistad(username, friendName);
                         }
+                        break;
+
+                    case "SOLICITUDES ENVIADAS":
+                        System.out.println("Lista de solicitudes de amistad enviadas:");
+                        System.out.println(server.obtenerSolicitudesEnviadas(username));
                         break;
 
                     case "ELIMINAR AMIGO":

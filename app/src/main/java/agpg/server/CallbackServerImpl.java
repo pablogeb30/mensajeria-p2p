@@ -614,4 +614,35 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
+
+    // Funcion que te devuelve un ArrayList con las solicitudes de amistad enviadas por un usuario y todavia no han sido aceptadas
+    public ArrayList<String> obtenerSolicitudesEnviadas(String username) throws RemoteException {
+
+        // Obtener el ID del usuario actual
+        int userID = obtenerUserID(username);
+
+        ArrayList<String> solicitudesEnviadas = new ArrayList<>();
+        String sql = "SELECT Username FROM Usuarios WHERE UserID IN (SELECT UserID2 FROM Amigos WHERE UserID1 = ? AND EstadoAmistad = 'pendiente');";
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userID);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String usernameAmigo = rs.getString("Username");
+                    solicitudesEnviadas.add(usernameAmigo);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener solicitudes de amistad: " + e.getMessage());
+            throw new RemoteException("Error al obtener solicitudes de amistad", e);
+        }
+
+        return solicitudesEnviadas;
+    }
+
+
+  
+
 }
