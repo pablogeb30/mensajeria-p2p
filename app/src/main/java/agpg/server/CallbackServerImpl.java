@@ -614,8 +614,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-
-    // Funcion que te devuelve un ArrayList con las solicitudes de amistad enviadas por un usuario y todavia no han sido aceptadas
+    // Funcion que te devuelve un ArrayList con las solicitudes de amistad enviadas
+    // por un usuario y todavia no han sido aceptadas
     public ArrayList<String> obtenerSolicitudesEnviadas(String username) throws RemoteException {
 
         // Obtener el ID del usuario actual
@@ -641,8 +641,5 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
 
         return solicitudesEnviadas;
     }
-
-
-  
 
 }

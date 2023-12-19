@@ -559,8 +559,8 @@ public class ChatUI extends JFrame {
         sendRequestListPanel.setLayout(new BoxLayout(sendRequestListPanel, BoxLayout.Y_AXIS));
         sendRequestListPanel.setBackground(UIUtils.COLOR_BACKGROUND);
         try {
-            for (String request : server.obtenerSolicitudesAmistad(clientObject.getUsername())) {
-                addRequest(request);
+            for (String request : server.obtenerSolicitudesEnviadas(clientObject.getUsername())) {
+                addSendRequest(request);
             }
         } catch (RemoteException e) {
             System.out.println("Excepcion al obtener las solicitudes de amistad: " + e.getMessage());
