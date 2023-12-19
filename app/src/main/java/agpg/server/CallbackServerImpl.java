@@ -544,8 +544,8 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         }
     }
 
-
-    // Método para eliminar un amigo --> Marcamos la solicitud como rechazada
+    // Método para eliminar un amigo -- > Eliminar la solicitud de amistad de la
+    // base de datos
     public void eliminarAmigo(String userName, String friendName) throws RemoteException {
 
         // Obtener el ID del usuario actual
@@ -555,21 +555,27 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
         int friendID = obtenerUserID(friendName);
 
         // Actualizar la solicitud de amistad en la base de datos
-        String sql = "UPDATE Amigos SET EstadoAmistad = 'rechazada' WHERE UserID1 = ? AND UserID2 = ?;";
+        String sql = "DELETE FROM Amigos WHERE (UserID1 = ? AND UserID2 = ?) OR (UserID1 = ? AND UserID2 = ?);";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, friendID);
             pstmt.setInt(2, userID);
+            pstmt.setInt(3, userID);
+            pstmt.setInt(4, friendID);
             pstmt.executeUpdate();
+            // Notificar a los dos clientes sobre la actualización
+            clientMap.get(userName).removeClient(clientMap.get(friendName));
+            clientMap.get(friendName).removeClient(clientMap.get(userName));
         } catch (SQLException e) {
             System.err.println("Error al eliminar amigo: " + e.getMessage());
             throw new RemoteException("Error al eliminar amigo", e);
         }
     }
 
-    // Método para eliminar la cuenta de usuario, se solicita la contraseña para confirmar --> Se elimina el usuario y antes todas sus solicitudes de amistad
+    // Método para eliminar la cuenta de usuario, se solicita la contraseña para
+    // confirmar --> Se elimina el usuario y antes todas sus solicitudes de amistad
     public boolean eliminarCuenta(String userName, String password) throws RemoteException {
-        
+
         try (Connection conn = dataSource.getConnection()) {
             if (!usuarioYaExiste(userName, conn)) {
                 return false; // Usuario no existe
@@ -607,8 +613,5 @@ public class CallbackServerImpl extends UnicastRemoteObject implements CallbackS
             throw new RemoteException("Error al eliminar la cuenta", e);
         }
     }
-
-
-  
 
 }

@@ -33,6 +33,9 @@ public class ChatUI extends JFrame {
     // Panel de menu
     private JPanel menuPanel;
 
+    // Usuario seleccionado
+    private String selectedUser;
+
     // Paneles de cartas
     private CardLayout cardLayout;
     private JPanel cardsPanel;
@@ -111,12 +114,11 @@ public class ChatUI extends JFrame {
                 String message = messageField.getText();
                 if (!message.trim().isEmpty()) {
                     try {
-                        String selectedClient = selectClient();
                         // Llamamos al metodo sendMessage del objeto cliente
-                        clientObject.sendMessage(selectedClient, message);
+                        clientObject.sendMessage(selectedUser, message);
                         messageField.setText("");
                         // Actualizamos el chat propio
-                        updateMyChat(selectedClient, new Message(message, clientObject.getUsername(), selectedClient));
+                        updateMyChat(selectedUser, new Message(message, clientObject.getUsername(), selectedUser));
                     } catch (RemoteException e) {
                         System.out.println("Excepcion al mandar el mensaje: " + e.getMessage());
                     }
@@ -274,13 +276,28 @@ public class ChatUI extends JFrame {
         deleteAccountButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JPasswordField password = new JPasswordField();
+                String passwordString = null;
+                // Mostramos un cuadro de dialogo para introducir la contrasenha actual
+                int result = JOptionPane.showConfirmDialog(null, password, "Introduzca contraseña actual",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                if (result == JOptionPane.OK_OPTION && password.getPassword().length != 0) {
+                    char[] currentPassword = password.getPassword();
+                    passwordString = new String(currentPassword);
+                } else {
+                    return;
+                }
                 // Mostrar un cuadro de dialogo de confirmacion
                 int confirm = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que quieres eliminar tu cuenta?",
                         "Confirmación", JOptionPane.YES_NO_OPTION);
                 // Si el usuario confirma, realiza la accion de eliminar la cuenta
                 if (confirm == JOptionPane.YES_OPTION) {
                     // El usuario confirmo, realiza la accion de eliminar la cuenta aqui
-                    // ...
+                    try {
+                        server.eliminarCuenta(clientObject.getUsername(), passwordString);
+                    } catch (RemoteException ex) {
+                        System.out.println("Excepcion al eliminar la cuenta: " + ex.getMessage());
+                    }
                     // Mensaje de exito y termina el programa
                     JOptionPane.showMessageDialog(null, "Cuenta eliminada con éxito.");
                     System.exit(0);
@@ -344,7 +361,7 @@ public class ChatUI extends JFrame {
 
         // Creamos el boton de enviar solicitudes de amistad
         sendRequestButton = new JButton(
-                "                   Enviar solicitudes                   ") {
+                "                    Enviar solicitudes                    ") {
             @Override
             protected void paintComponent(Graphics g) {
                 if (getModel().isRollover()) {
@@ -370,7 +387,7 @@ public class ChatUI extends JFrame {
         requestsPanel.add(Box.createVerticalStrut(20));
 
         // Creamos el boton de gestionar solicitudes
-        manageRequestsButton = new JButton("               Gestionar solicitudes               ") {
+        manageRequestsButton = new JButton("                 Gestionar solicitudes                  ") {
             @Override
             protected void paintComponent(Graphics g) {
                 if (getModel().isRollover()) {
@@ -541,6 +558,13 @@ public class ChatUI extends JFrame {
         sendRequestListPanel.setPreferredSize(new Dimension(300, 400));
         sendRequestListPanel.setLayout(new BoxLayout(sendRequestListPanel, BoxLayout.Y_AXIS));
         sendRequestListPanel.setBackground(UIUtils.COLOR_BACKGROUND);
+        try {
+            for (String request : server.obtenerSolicitudesAmistad(clientObject.getUsername())) {
+                addRequest(request);
+            }
+        } catch (RemoteException e) {
+            System.out.println("Excepcion al obtener las solicitudes de amistad: " + e.getMessage());
+        }
         JScrollPane sendRequestListScrollPane = new JScrollPane(sendRequestListPanel);
         sendRequestListScrollPane.setBorder(BorderFactory.createEmptyBorder());
         sendRequestsPanel.add(sendRequestListScrollPane);
@@ -626,12 +650,11 @@ public class ChatUI extends JFrame {
                 String message = messageField.getText();
                 if (!message.trim().isEmpty()) {
                     try {
-                        String selectedClient = selectClient();
                         // Llamamos al metodo sendMessage del objeto cliente
-                        clientObject.sendMessage(selectedClient, message);
+                        clientObject.sendMessage(selectedUser, message);
                         messageField.setText("");
                         // Actualizamos el chat propio
-                        updateMyChat(selectedClient, new Message(message, clientObject.getUsername(), selectedClient));
+                        updateMyChat(selectedUser, new Message(message, clientObject.getUsername(), selectedUser));
                     } catch (RemoteException ex) {
                         toaster.error("Error al mandar el mensaje.");
                     }
@@ -671,6 +694,7 @@ public class ChatUI extends JFrame {
         // Limpiamos el area de chat
         try {
             doc.remove(0, doc.getLength());
+            doc.insertString(doc.getLength(), "\n", null);
         } catch (BadLocationException e) {
             System.out.println("Excepcion al definir el chat: " + e.getMessage());
         }
@@ -710,33 +734,33 @@ public class ChatUI extends JFrame {
                 messagesMap.put(receiver, new ArrayList<>());
             }
             messagesMap.get(receiver).add(message);
+            if (!message.getReceiver().equals(selectedUser)) {
+                return;
+            }
             System.out.println(message.getSender() + " -> " + message.getReceiver() + " " + message.getDate());
             System.out.println(message.getMessage());
             StyleConstants.setForeground(attrs, Color.cyan);
             StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
             doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
-            doc.insertString(doc.getLength(), clientObject.getUsername() + "  \n", null);
+            doc.insertString(doc.getLength(), message.getSender() + "  \n", null);
             StyleConstants.setForeground(attrs, Color.WHITE);
             StyleConstants.setAlignment(attrs, StyleConstants.ALIGN_RIGHT);
             doc.setParagraphAttributes(doc.getLength(), 1, attrs, false);
             doc.insertString(doc.getLength(), message.getMessage() + "  \n\n", null);
-        } catch (RemoteException | BadLocationException e) {
+        } catch (BadLocationException e) {
             System.out.println("Excepcion al actualizar el area de chat: " + e.getMessage());
         }
     }
 
     public void updateOtherChat(String sender, Message message) {
-        // Limpiamos el area de chat
-        try {
-            doc.remove(0, doc.getLength());
-        } catch (BadLocationException e) {
-            System.out.println("Excepcion al definir el chat: " + e.getMessage());
-        }
         try {
             if (!messagesMap.containsKey(sender)) {
                 messagesMap.put(sender, new ArrayList<>());
             }
             messagesMap.get(sender).add(message);
+            if (!message.getSender().equals(selectedUser)) {
+                return;
+            }
             System.out.println(message.getSender() + " -> " + message.getReceiver() + " " + message.getDate());
             System.out.println(message.getMessage());
             StyleConstants.setForeground(attrs, UIUtils.COLOR_INTERACTIVE_LIGHTER);
@@ -802,18 +826,14 @@ public class ChatUI extends JFrame {
                                 // Si el usuario confirma, realiza la accion de eliminar el amigo
                                 if (confirm == JOptionPane.YES_OPTION) {
                                     // El usuario confirmo, realiza la accion de eliminar el amigo aqui
-                                    // ...
+                                    try {
+                                        server.eliminarAmigo(clientObject.getUsername(), username);
+                                    } catch (RemoteException ex) {
+                                        System.out.println("Excepcion al eliminar amigo: " + ex.getMessage());
+                                    }
                                     // Eliminar amigo
                                     removeFriend(username);
                                     removeClient(username);
-                                    try {
-                                        if (clientObject.getNumClients() == 0) {
-                                            cardLayout.show(cardsPanel, "defaultPanel");
-                                            cardLayoutSecondary.show(cardsPanelSecondary, "defaultSecondaryPanel");
-                                        }
-                                    } catch (RemoteException ex) {
-                                        System.out.println("Excepcion al obtener el num clientes: " + ex.getMessage());
-                                    }
                                     friendsListPanel.revalidate();
                                     friendsListPanel.repaint();
                                     return;
@@ -873,6 +893,7 @@ public class ChatUI extends JFrame {
                                 messageField.setVisible(true);
                                 sendButton.setVisible(true);
                                 cardLayoutSecondary.show(cardsPanelSecondary, "chatPanel");
+                                selectedUser = username;
                             }
                         });
                     }
